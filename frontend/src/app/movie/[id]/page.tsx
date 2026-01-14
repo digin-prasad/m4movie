@@ -32,6 +32,7 @@ export default async function MoviePage({ params }: { params: Promise<{ id: stri
                     src={tmdb.getImage(movie.backdrop_path || movie.poster_path, 'original')}
                     alt={title}
                     fill
+                    unoptimized
                     className="object-cover"
                     priority
                 />
@@ -54,6 +55,7 @@ export default async function MoviePage({ params }: { params: Promise<{ id: stri
                             src={tmdb.getImage(movie.poster_path)}
                             alt={title}
                             fill
+                            unoptimized
                             className="object-cover"
                         />
                     </div>

@@ -14,21 +14,33 @@ export interface TMDBMovie {
     media_type?: string;
 }
 
-// Helper for resilience
+// Helper for resilience with Next.js caching support
 const fetchWithRetry = async (url: string, options?: RequestInit, retries = 3): Promise<Response> => {
+    const fetchOptions: RequestInit = {
+        ...options,
+        // Default to long-term cache for movies unless specified
+        next: { revalidate: 86400, ...(options as any)?.next }
+    };
+
     for (let i = 0; i < retries; i++) {
         try {
-            const res = await fetch(url, { ...options, cache: 'no-store' }); // Disable cache to prevent stale errors
+            const res = await fetch(url, fetchOptions);
             if (res.ok) return res;
-            // If 429 (Too Many Requests), wait longer
+
             if (res.status === 429) {
-                await new Promise(r => setTimeout(r, 1000 * (i + 1)));
+                const wait = (i + 1) * 2000;
+                console.warn(`TMDB Rate Limited. Waiting ${wait}ms...`);
+                await new Promise(r => setTimeout(r, wait));
+            } else if (res.status >= 500) {
+                // Server error, retry
+                await new Promise(r => setTimeout(r, 500 * (i + 1)));
+            } else {
+                return res; // Don't retry client errors (404, 401, etc)
             }
         } catch (err) {
             if (i === retries - 1) throw err;
+            await new Promise(r => setTimeout(r, 1000 * (i + 1)));
         }
-        // Backoff
-        await new Promise(r => setTimeout(r, 500 * (i + 1)));
     }
     throw new Error('Max retries reached');
 };
@@ -41,25 +53,17 @@ export const tmdb = {
 
     getTrending: async (page: number = 1): Promise<TMDBMovie[]> => {
         const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
-        console.log("Fetching trending movies...");
-
         try {
-            if (!apiKey) {
-                console.warn("TMDB_API_KEY is missing via process.env.NEXT_PUBLIC_TMDB_API_KEY");
-                return [];
-            }
-
-            // Switch to daily trending
+            if (!apiKey) return [];
             const url = new URL(`${BASE_URL}/trending/movie/day`);
             url.searchParams.append('api_key', apiKey);
             url.searchParams.append('page', page.toString());
 
-            const res = await fetchWithRetry(url.toString());
+            const res = await fetchWithRetry(url.toString(), {
+                next: { revalidate: 86400 } // 24 hours for trending
+            });
 
-            if (!res.ok) {
-                throw new Error(`TMDB API Error: ${res.status} ${res.statusText}`);
-            }
-
+            if (!res.ok) throw new Error(`TMDB API Error: ${res.status}`);
             const data = await res.json();
             return data.results || [];
         } catch (error) {
@@ -76,7 +80,9 @@ export const tmdb = {
             url.searchParams.append('api_key', apiKey);
             url.searchParams.append('query', query);
 
-            const res = await fetchWithRetry(url.toString());
+            const res = await fetchWithRetry(url.toString(), {
+                next: { revalidate: 3600 } // 1 hour for search results
+            });
             const data = await res.json();
             return data.results || [];
         } catch (error) {
@@ -89,16 +95,16 @@ export const tmdb = {
         const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
         if (!apiKey) return [];
         try {
-            // Switch to daily trending
             const url = new URL(`${BASE_URL}/trending/tv/day`);
             url.searchParams.append('api_key', apiKey);
             url.searchParams.append('page', page.toString());
 
-            const res = await fetchWithRetry(url.toString());
+            const res = await fetchWithRetry(url.toString(), {
+                next: { revalidate: 86400 }
+            });
             const data = await res.json();
             return data.results || [];
         } catch (error) {
-            console.warn("TMDB TV Trending Error", error);
             return [];
         }
     },
@@ -109,16 +115,17 @@ export const tmdb = {
         try {
             const url = new URL(`${BASE_URL}/discover/tv`);
             url.searchParams.append('api_key', apiKey);
-            url.searchParams.append('with_genres', '16'); // Animation
-            url.searchParams.append('with_original_language', 'ja'); // Japanese
+            url.searchParams.append('with_genres', '16');
+            url.searchParams.append('with_original_language', 'ja');
             url.searchParams.append('sort_by', 'popularity.desc');
             url.searchParams.append('page', page.toString());
 
-            const res = await fetchWithRetry(url.toString());
+            const res = await fetchWithRetry(url.toString(), {
+                next: { revalidate: 86400 }
+            });
             const data = await res.json();
             return data.results || [];
         } catch (error) {
-            console.warn("TMDB Anime Error", error);
             return [];
         }
     },
@@ -129,18 +136,20 @@ export const tmdb = {
         try {
             const url = new URL(`${BASE_URL}/discover/tv`);
             url.searchParams.append('api_key', apiKey);
-            url.searchParams.append('with_original_language', 'ko'); // Korean
+            url.searchParams.append('with_original_language', 'ko');
             url.searchParams.append('sort_by', 'popularity.desc');
             url.searchParams.append('page', page.toString());
 
-            const res = await fetchWithRetry(url.toString());
+            const res = await fetchWithRetry(url.toString(), {
+                next: { revalidate: 86400 }
+            });
             const data = await res.json();
             return data.results || [];
         } catch (error) {
-            console.warn("TMDB Asian Drama Error", error);
             return [];
         }
     },
+
     getMovie: async (id: number): Promise<TMDBMovie | null> => {
         const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
         if (!apiKey) return null;
@@ -148,11 +157,12 @@ export const tmdb = {
             const url = new URL(`${BASE_URL}/movie/${id}`);
             url.searchParams.append('api_key', apiKey);
 
-            const res = await fetchWithRetry(url.toString());
+            const res = await fetchWithRetry(url.toString(), {
+                next: { revalidate: 86400 }
+            });
             if (!res.ok) return null;
             return await res.json();
         } catch (error) {
-            console.warn("TMDB Get Error", error);
             return null;
         }
     },
@@ -164,11 +174,12 @@ export const tmdb = {
             const url = new URL(`${BASE_URL}/tv/${id}`);
             url.searchParams.append('api_key', apiKey);
 
-            const res = await fetchWithRetry(url.toString());
+            const res = await fetchWithRetry(url.toString(), {
+                next: { revalidate: 86400 }
+            });
             if (!res.ok) return null;
             return await res.json();
         } catch (error) {
-            console.warn("TMDB Get TV Error", error);
             return null;
         }
     }

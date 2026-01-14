@@ -127,6 +127,7 @@ export function HeroSection({ backgroundMovies }: HeroSectionProps) {
                                             src={movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : '/placeholder.jpg'}
                                             alt={movie.title}
                                             fill
+                                            unoptimized
                                             className="object-cover"
                                         />
                                     </div>

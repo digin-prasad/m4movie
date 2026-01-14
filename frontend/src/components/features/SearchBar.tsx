@@ -139,6 +139,7 @@ export function SearchBar({
                                                 src={tmdb.getImage(movie.poster_path, 'w92')}
                                                 alt={movie.title}
                                                 fill
+                                                unoptimized
                                                 className="object-cover"
                                             />
                                         </div>
