@@ -3,7 +3,7 @@ const { Telegraf } = require('telegraf');
 const startHandler = require('./handlers/start');
 
 if (!process.env.BOT_TOKEN) {
-    console.error('BOT_TOKEN is missing in .env');
+    console.error('[CRITICAL] BOT_TOKEN is missing! Please set it in your environment or Render dashboard.');
     process.exit(1);
 }
 
