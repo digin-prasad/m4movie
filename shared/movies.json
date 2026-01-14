@@ -1,0 +1,57 @@
+{
+  "movies": [
+    {
+      "slug": "predator_badlands_2025_720p",
+      "title": "Predator Badlands",
+      "year": "2025",
+      "quality": "720p",
+      "file_id": "BQACAgQAAyEFAATXOpYhAAMOaWcZqauFdZZaKPx4_bFmpkYy8LEAAuIbAAIk9OBS7mJrbooF-Fw4BA",
+      "caption": "Predator.Badlands.2025.720p.WEB-DL.x265.10Bit-Pahe.in.mkv",
+      "indexed_at": "2026-01-14T10:10:38.438Z",
+      "size": "738.29 MB",
+      "codec": "X265 10BIT"
+    },
+    {
+      "slug": "predator_badlands_2025_1080p",
+      "title": "Predator Badlands",
+      "year": "2025",
+      "quality": "1080p",
+      "file_id": "BQACAgQAAyEFAATXOpYhAAMMaWcZqbqIjpeIocRUAyMsldjsdnEAAuYbAAIk9OBSoXeCKyI-rwo4BA",
+      "caption": "Predator.Badlands.2025.1080p.WEB-DL.x264.6CH-Pahe.in.mkv",
+      "indexed_at": "2026-01-14T10:10:38.436Z",
+      "size": "2.07 GB",
+      "codec": "X264"
+    },
+    {
+      "slug": "predator_badlands_2025_480p",
+      "title": "Predator Badlands",
+      "year": "2025",
+      "quality": "480p",
+      "file_id": "BQACAgQAAyEFAATXOpYhAAMNaWcZqaKuib6j_tFsqvG4x0JWPawAAtobAAIk9OBSfvNYrjrkh_A4BA",
+      "caption": "Predator.Badlands.2025.480p.WEB-DL.x264.450MB-Pahe.in.mkv",
+      "indexed_at": "2026-01-14T10:10:38.437Z",
+      "size": "451.06 MB",
+      "codec": "X264"
+    },
+    {
+      "slug": "thudarum_2025_1080p",
+      "title": "Thudarum",
+      "year": "2025",
+      "quality": "1080p",
+      "file_id": "BQACAgQAAyEFAATXOpYhAAMjaWcgfQnT8mBFDGsa7gbxGOhB_OYAAskdAAJ2lNFRaR_P5mDoNL44BA",
+      "caption": "Thudarum.2025.1080p.AV1.DS4K.10bit.HS.WEBRip.DDP.5.1.224k.Esub-KC.mkv\n\n🎬 1080p AV1 10bit ⏳ 02:44:58\n🔊 Malayalam\n💬 ESUB\n\n➠Latest Uploads:@ProSearchZ\n ➠BOT Updates:@ProSearch",
+      "indexed_at": "2026-01-14T04:50:05.688Z"
+    },
+    {
+      "slug": "predator_badlands_2025_720p_v2",
+      "title": "Predator Badlands",
+      "year": "2025",
+      "quality": "720p",
+      "size": "1.15 GB",
+      "codec": "HDR X264",
+      "file_id": "BQACAgQAAyEFAATXOpYhAAMLaWcZqZvGbcsKwSH90kWzs0hzwdoAAioiAALd-FBRphgH_pGg1rs4BA",
+      "caption": "Predator Badlands (2025) HQ HDRip - 720p - x264 - [Tamil.mkv",
+      "indexed_at": "2026-01-14T10:10:38.433Z"
+    }
+  ]
+}

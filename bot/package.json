@@ -1,0 +1,17 @@
+{
+    "name": "movie-nexus-bot",
+    "version": "1.0.0",
+    "description": "Telegram bot for Movie Nexus",
+    "main": "index.js",
+    "scripts": {
+        "start": "node index.js",
+        "dev": "nodemon index.js"
+    },
+    "dependencies": {
+        "telegraf": "^4.16.3",
+        "dotenv": "^16.4.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.1.0"
+    }
+}
