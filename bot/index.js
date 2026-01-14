@@ -63,9 +63,9 @@ const server = http.createServer((req, res) => {
     }
 });
 
-// In a unified deploy, Next.js takes process.env.PORT. 
-// We use a different port for the bot's internal health check.
-const BOT_PORT = process.env.BOT_PORT || 10000;
+// In a unified deploy, Next.js takes process.env.PORT (usually 10000). 
+// We use a different port for the bot's internal health check to avoid conflict.
+const BOT_PORT = process.env.BOT_PORT || 10001;
 server.listen(BOT_PORT, () => {
     console.log(`Bot internal keep-alive listening on port ${BOT_PORT}`);
 });
