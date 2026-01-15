@@ -11,7 +11,7 @@ const client = new MongoClient(uri);
 
 const parseCaption = (caption, mediaSize) => {
     // 1. Explicit Quality
-    let qualityMatch = caption.match(/(480p|576p|720p|1080p|2160p|4k)/i);
+    let qualityMatch = caption.match(/(480p|576p|720p|1080p|2160p|2k|4k)/i);
     let quality = qualityMatch ? qualityMatch[0].toLowerCase() : null;
 
     // 2. Source-based Heuristics
@@ -42,7 +42,7 @@ const parseCaption = (caption, mediaSize) => {
     quality = quality || 'unknown';
 
     // Year
-    const yearMatch = caption.match(/(?:^|[.\s\(])(19\d{2}|20\d{2})(?:$|[.\s\)])/);
+    const yearMatch = caption.match(/(?:^|[.\s\(_-])(19\d{2}|20\d{2})(?:$|[.\s\)_])/);
     const year = yearMatch ? yearMatch[1] : 'unknown';
 
     // Title
@@ -55,13 +55,17 @@ const parseCaption = (caption, mediaSize) => {
         title = caption.substring(0, qualityIndex);
     }
 
-    title = title.replace(/[.\(\)]/g, ' ').trim();
+    // Capture Codec for Codec Field Update (This was missing in reparse, adding it now)
+    const codecMatch = caption.match(/(x264|x265|hevc|h\.?264|h\.?265|av1|vp9|10bit|hdr|psa|pahe|yify|rarbg)/gi);
+    const codec = codecMatch ? codecMatch.join(' ').toUpperCase() : '';
+
+    title = title.replace(/[.\(\)_-]/g, ' ').trim();
     title = title.replace(/\s+/g, ' ');
 
     // Slug
     const slug = `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_${year}_${quality}`;
 
-    return { title, year, quality, size, slug };
+    return { title, year, quality, size, slug, codec };
 };
 
 const run = async () => {
@@ -101,6 +105,7 @@ const run = async () => {
                     $set: {
                         quality: newData.quality,
                         size: newData.size, // Refresh size string formatting
+                        codec: newData.codec, // Save Codec!
                         // title: newData.title, // Be careful updating title if user manually edited? No, user doesn't edit.
                         slug: newData.slug // Important for matching? Actually file_id is key.
                     }

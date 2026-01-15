@@ -29,8 +29,9 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
     useEffect(() => {
         const fetchDownloads = async () => {
             try {
-                // Fetch specific results for this movie title (Server Side Search)
-                const res = await fetch(`/api/movies?q=${encodeURIComponent(movieTitle)}`);
+                // Fetch specific results for this movie title (Server Side Search) WITH ungroup=true
+                // This ensures we get ALL file versions (720p, 1080p) not just one banner
+                const res = await fetch(`/api/movies?q=${encodeURIComponent(movieTitle)}&ungroup=true`);
                 const data = await res.json();
 
                 // Handle API response (Array)
@@ -170,7 +171,7 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                             <div className="flex-1 min-w-0">
                                 <div className="flex items-center gap-2 mb-1">
                                     <h4 className="font-medium text-white truncate text-sm md:text-base">
-                                        {file.title} {file.year} <span className="text-primary">{file.quality?.toUpperCase()}</span>
+                                        {file.original_title ? file.original_title.replace(/[._]/g, ' ') : file.title} {file.year !== 'unknown' ? file.year : ''} <span className="text-primary">{file.quality?.toUpperCase()}</span>
                                     </h4>
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
@@ -187,7 +188,14 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                                         </span>
                                     )}
 
-                                    <span className="px-2 py-0.5 rounded bg-green-500/10 text-green-500 border border-green-500/20 font-medium text-[10px] uppercase tracking-wider">
+                                    {/* Good Encode Badge */}
+                                    {/(PSA|HEVC|x265|10bit|Pahe)/i.test(file.codec || '') && (
+                                        <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400 border border-green-500/30 font-semibold text-[10px] uppercase tracking-wider shadow-[0_0_10px_rgba(74,222,128,0.1)]">
+                                            Good Encode
+                                        </span>
+                                    )}
+
+                                    <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium text-[10px] uppercase tracking-wider">
                                         Telegram File
                                     </span>
                                 </div>

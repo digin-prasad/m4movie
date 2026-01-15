@@ -16,7 +16,7 @@ const processMessage = async (message) => {
 
     // Improved Parsing Logic for Scene Releases
     // 1. Explicit Quality (e.g. 1080p)
-    let qualityMatch = caption.match(/(480p|576p|720p|1080p|2160p|4k)/i);
+    let qualityMatch = caption.match(/(480p|576p|720p|1080p|2160p|2k|4k)/i);
     let quality = qualityMatch ? qualityMatch[0].toLowerCase() : null;
 
     // 2. Source-based Heuristics (if explicit quality missing)
@@ -46,7 +46,7 @@ const processMessage = async (message) => {
 
     quality = quality || 'unknown';
 
-    const yearMatch = caption.match(/(?:^|[.\s\(])(19\d{2}|20\d{2})(?:$|[.\s\)])/);
+    const yearMatch = caption.match(/(?:^|[.\s\(_-])(19\d{2}|20\d{2})(?:$|[.\s\)_])/);
     const year = yearMatch ? yearMatch[1] : 'unknown';
 
     let title = caption;
@@ -60,7 +60,14 @@ const processMessage = async (message) => {
         title = caption.substring(0, qualityIndex);
     }
 
-    title = title.replace(/[.\(\)]/g, ' ').trim();
+    // Capture Codecs and Encoders (PSA, Pahe, HEVC, etc.)
+    const codecMatch = caption.match(/(x264|x265|hevc|h\.?264|h\.?265|av1|vp9|10bit|hdr|psa|pahe|yify|rarbg)/gi);
+    const codec = codecMatch ? codecMatch.join(' ').toUpperCase() : '';
+
+    // Placeholder for language detection
+    const language = 'English'; // Default to English for now
+
+    title = title.replace(/[.\(\)_-]/g, ' ').trim();
     title = title.replace(/\s+/g, ' ');
 
     // Generate Slug

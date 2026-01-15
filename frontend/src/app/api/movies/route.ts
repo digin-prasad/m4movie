@@ -38,17 +38,26 @@ export async function GET(request: NextRequest) {
         const localRaw = await searchLocalMovies(query);
         const localMovies = await hydrateMovies(localRaw);
 
-        // Deduplicate Local (One Banner Rule)
-        const uniqueLocalMap = new Map<number, any>();
-        for (const m of localMovies) {
-            if (!uniqueLocalMap.has(m.id)) uniqueLocalMap.set(m.id, m);
-        }
-        const uniqueLocal = Array.from(uniqueLocalMap.values());
-        const localIds = new Set(uniqueLocal.map(m => m.id));
+        // 3. Merge & Deduplicate
+        // If 'ungroup=true' is set (for DownloadSection), we return ALL local matches
+        const ungroup = searchParams.get('ungroup') === 'true';
 
-        // 2. Get Global Results (if query exists)
+        let finalLocalHelper = localMovies;
+        if (!ungroup) {
+            // Deduplicate Local (One Banner Rule)
+            const uniqueLocalMap = new Map<number, any>();
+            for (const m of localMovies) {
+                if (!uniqueLocalMap.has(m.id)) uniqueLocalMap.set(m.id, m);
+            }
+            finalLocalHelper = Array.from(uniqueLocalMap.values());
+        }
+
+        const localIds = new Set(finalLocalHelper.map(m => m.id));
+
+        // 2. Get Global Results (if query exists AND not ungrouping)
+        // We usually don't need global results for DownloadSection, only for Search
         let globalMovies: TMDBMovie[] = [];
-        if (query.trim().length > 0) {
+        if (query.trim().length > 0 && !ungroup) {
             try {
                 const rawGlobal = await tmdb.searchMovies(query);
                 globalMovies = rawGlobal
@@ -60,7 +69,7 @@ export async function GET(request: NextRequest) {
         }
 
         // 3. Merge (Local First, then Global)
-        const finalResults = [...uniqueLocal, ...globalMovies].slice(0, 20); // Limit to top 20
+        const finalResults = [...finalLocalHelper, ...globalMovies].slice(0, 20); // Limit to top 20
 
         return NextResponse.json(finalResults);
 
