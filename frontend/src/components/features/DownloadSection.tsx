@@ -162,6 +162,13 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                             Request This Movie
                         </Link>
                     </div>
+                ) : filteredFiles.length === 0 ? (
+                    <div className="text-center p-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
+                        <p>No files found for {activeTab.toUpperCase()}.</p>
+                        <button onClick={() => setActiveTab(availableQualities[0])} className="text-primary text-sm hover:underline mt-2">
+                            Show all available files
+                        </button>
+                    </div>
                 ) : (
                     filteredFiles.map((file, i) => (
                         <div
@@ -211,13 +218,6 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                             </Link>
                         </div>
                     ))
-                ) : (
-                <div className="text-center p-8 text-muted-foreground bg-white/5 rounded-xl border border-white/5">
-                    <p>No files found for {activeTab.toUpperCase()}.</p>
-                    <button onClick={() => setActiveTab(availableQualities[0])} className="text-primary text-sm hover:underline mt-2">
-                        Show all available files
-                    </button>
-                </div> 
                 )}
             </div>
 
