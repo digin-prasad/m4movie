@@ -70,14 +70,41 @@ export async function GET(request: NextRequest) {
     }
 }
 
+// Helper to clean filenames for TMDB search
+function parseFilename(raw: string): { title: string; year: string | undefined } {
+    // 1. Remove brackets/parentheses and their content often containing irrelevants like [Malayalam] or (2019)
+    // Actually, we WANT specific years from brackets if possible, but usually cleaning is safer.
+
+    // Regex to find 4-digit year (19xx or 20xx)
+    const yearMatch = raw.match(/\b(19|20)\d{2}\b/);
+    const year = yearMatch ? yearMatch[0] : undefined;
+
+    // Get text BEFORE the year (usually the title)
+    let title = raw;
+    if (year) {
+        title = raw.split(year)[0];
+    }
+
+    // Clean separators and common junk
+    title = title
+        .replace(/[._()[\]-]/g, ' ') // Replace dots, underscores, brackets with space
+        .replace(/\b(1080p|720p|480p|WEB-DL|BluRay|HDRip|DVDRip|X264|HEVC)\b/gi, '') // Remove quality tags
+        .trim();
+
+    return { title, year };
+}
+
 async function hydrateMovies(localMovies: LocalMovie[]) {
     return Promise.all(localMovies.map(async (m) => {
-        // Try to fetch real TMDB ID
-        const tmdbMeta = await fetchTMDBMetadata(m.title, m.year);
+        // CLEAN the title before searching TMDB
+        const { title: cleanTitle, year: cleanYear } = parseFilename(m.title);
+
+        // Use clean info for hydration search
+        const tmdbMeta = await fetchTMDBMetadata(cleanTitle, cleanYear || m.year);
 
         if (tmdbMeta) {
             return {
-                id: tmdbMeta.id, // Use REAL TMDB ID
+                id: tmdbMeta.id, // Use REAL TMDB ID (Merging key)
                 title: tmdbMeta.title,
                 original_title: m.title, // Keep local title as original
                 overview: `[LOCAL AVAILABLE] ${m.quality} • ${m.size} • ${m.codec}\n${tmdbMeta.overview || ''}`,
