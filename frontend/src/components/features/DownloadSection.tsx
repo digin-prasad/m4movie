@@ -66,7 +66,7 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
     }, [movieTitle]);
 
     // Filter files based on active tab
-    const filteredFiles = downloads.filter(f => f.quality === activeTab);
+    const filteredFiles = downloads.filter(f => (f.quality || 'Unknown') === activeTab);
 
     // Extract available qualities dynamically (filter out empty/null)
     const availableQualities = Array.from(new Set(downloads.map(d => d.quality || 'Unknown'))).sort();
