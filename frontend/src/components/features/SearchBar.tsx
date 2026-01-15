@@ -42,8 +42,15 @@ export function SearchBar({
         const timer = setTimeout(async () => {
             if (query.trim()) {
                 setLoading(true);
-                const movies = await tmdb.searchMovies(query);
-                setResults(movies.slice(0, 10));
+                // Call LOCAL API for fuzzy search on inventory
+                try {
+                    const res = await fetch(`/api/movies?q=${encodeURIComponent(query)}`);
+                    const movies = await res.json();
+                    setResults(Array.isArray(movies) ? movies.slice(0, 10) : []);
+                } catch (e) {
+                    console.error("Search failed", e);
+                    setResults([]);
+                }
                 setLoading(false);
                 setIsOpen(true);
             } else {

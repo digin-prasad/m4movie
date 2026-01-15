@@ -1,25 +1,7 @@
-const fs = require('fs');
-const path = require('path');
-const moviesPath = path.join(__dirname, '../../shared/movies.json');
+const db = require('../lib/db');
 const legacyMovies = require('../data/movies.json'); // Keep legacy support if needed
 
-// Cache DB in memory
-let moviesCache = null;
-let lastCacheTime = 0;
-const CACHE_TTL = 60000; // 1 minute cache (or rely on indexer to invalidate)
 
-const readDB = () => {
-    const now = Date.now();
-    if (moviesCache && (now - lastCacheTime < CACHE_TTL)) {
-        return moviesCache;
-    }
-    try {
-        const data = JSON.parse(fs.readFileSync(moviesPath, 'utf8'));
-        moviesCache = data;
-        lastCacheTime = now;
-        return data;
-    } catch { return { movies: [] }; }
-};
 
 const escapeHTML = (str) => str.replace(/[&<>"']/g, m => ({
     '&': '&amp;',
@@ -41,7 +23,11 @@ module.exports = async (ctx) => {
     }
 
     const payload = ctx.startPayload;
-    console.log(`[BOT] Received Start payload: ${payload || 'NONE'}`);
+    if (payload) {
+        console.log(`[BOT] Received Start payload: ${payload}`);
+    } else if (ctx.message && ctx.message.text && ctx.message.text.startsWith('/start')) {
+        console.log(`[BOT] Manual start by ${ctx.from.first_name} (${ctx.from.id})`);
+    }
 
     // 2. Handle deep-link requests
     if (payload && payload.startsWith('request_')) {
@@ -55,10 +41,9 @@ module.exports = async (ctx) => {
         return ctx.reply('Welcome to M4MOVIE Bot! Visit our website to search and download movies in high quality.');
     }
 
-    // 4. Handle file delivery (Existing logic)
+    // 4. Handle file delivery
     try {
-        const db = readDB();
-        let movieFile = db.movies.find(m => m.slug === payload);
+        let movieFile = db.findBySlug(payload);
         if (!movieFile && legacyMovies[payload]) movieFile = legacyMovies[payload];
 
         if (!movieFile) {
@@ -66,11 +51,16 @@ module.exports = async (ctx) => {
         }
 
         if (movieFile.file_id) {
-            ctx.replyWithChatAction('upload_video').catch(() => { });
-            await ctx.telegram.sendVideo(ctx.chat.id, movieFile.file_id, {
+            ctx.replyWithChatAction('upload_document').catch(() => { });
+
+            const codec = movieFile.codec ? ` (${movieFile.codec})` : '';
+            const language = movieFile.language && movieFile.language !== 'Unknown' ? ` ${movieFile.language}` : '';
+            const extra = {
                 caption: `🎬 <b>${escapeHTML(movieFile.title)}</b> (${movieFile.year})\n💿 Quality: ${movieFile.quality.toUpperCase()}\n\nDownloaded via M4MOVIE`,
                 parse_mode: 'HTML'
-            });
+            };
+
+            await ctx.telegram.sendDocument(ctx.chat.id, movieFile.file_id, extra);
         } else {
             ctx.reply('❌ Error: File ID not found in database.');
         }

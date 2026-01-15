@@ -48,8 +48,32 @@ bot.on('message', (ctx, next) => {
 
 const http = require('http');
 
-bot.launch().then(() => {
-    console.log('Bot is running...');
+const { syncChannel } = require('./lib/sync');
+
+console.log('[BOT] Initializing...');
+
+bot.telegram.getMe().then((me) => {
+    console.log(`[BOT] Bot is running as @${me.username}`);
+
+    // Initial sync on startup (Real-Time Watcher Edition)
+    // Robust check for string "true" (handles spaces or different casing)
+    // if (String(process.env.ENABLE_CRAWLER).trim() === 'true') {
+    //     console.log('[SYNC] Crawler initialized');
+    //     syncChannel(bot).catch(err => console.error('[SYNC] Startup sync failed:', err));
+
+    //     // Auto sync interval (10 minutes = 600,000ms)
+    //     // setInterval(() => {
+    //     //    syncChannel(bot).catch(err => console.error('[SYNC] Cycle failed:', err));
+    //     // }, 600000);
+    // } else {
+    //     console.log('[SYNC] Crawler disabled in local mode (Set ENABLE_CRAWLER=true to start)');
+    // }
+}).catch(err => {
+    console.error('[CRITICAL] Failed to fetch bot info:', err.message);
+});
+
+bot.launch().catch(err => {
+    console.error('[CRITICAL] Bot launch failed:', err);
 });
 
 // Render Keep-Alive Server

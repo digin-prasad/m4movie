@@ -24,7 +24,7 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
     const [activeTab, setActiveTab] = useState('720p');
     const [downloads, setDownloads] = useState<any[]>([]); // Use 'any' or proper type
     const [loading, setLoading] = useState(true);
-    const botUsername = 'M4_MOVIEBOT';
+    const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || 'M4_MOVIEBOT';
 
     useEffect(() => {
         const fetchDownloads = async () => {

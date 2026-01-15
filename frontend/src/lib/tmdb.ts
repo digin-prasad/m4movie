@@ -16,33 +16,40 @@ export interface TMDBMovie {
 
 // Helper for resilience with Next.js caching support
 const fetchWithRetry = async (url: string, options?: RequestInit, retries = 3): Promise<Response> => {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000); // 10s timeout
+
     const fetchOptions: RequestInit = {
         ...options,
-        // Default to long-term cache for movies unless specified
+        signal: controller.signal,
         next: { revalidate: 86400, ...(options as any)?.next }
     };
 
-    for (let i = 0; i < retries; i++) {
-        try {
-            const res = await fetch(url, fetchOptions);
-            if (res.ok) return res;
+    try {
+        for (let i = 0; i < retries; i++) {
+            try {
+                const res = await fetch(url, fetchOptions);
+                clearTimeout(timeoutId);
+                if (res.ok) return res;
 
-            if (res.status === 429) {
-                const wait = (i + 1) * 2000;
-                console.warn(`TMDB Rate Limited. Waiting ${wait}ms...`);
-                await new Promise(r => setTimeout(r, wait));
-            } else if (res.status >= 500) {
-                // Server error, retry
-                await new Promise(r => setTimeout(r, 500 * (i + 1)));
-            } else {
-                return res; // Don't retry client errors (404, 401, etc)
+                if (res.status === 429) {
+                    const wait = (i + 1) * 2000;
+                    console.warn(`TMDB Rate Limited. Waiting ${wait}ms...`);
+                    await new Promise(r => setTimeout(r, wait));
+                } else if (res.status >= 500) {
+                    await new Promise(r => setTimeout(r, 500 * (i + 1)));
+                } else {
+                    return res;
+                }
+            } catch (err) {
+                if (i === retries - 1) throw err;
+                await new Promise(r => setTimeout(r, 1000 * (i + 1)));
             }
-        } catch (err) {
-            if (i === retries - 1) throw err;
-            await new Promise(r => setTimeout(r, 1000 * (i + 1)));
         }
+        throw new Error('Max retries reached');
+    } finally {
+        clearTimeout(timeoutId);
     }
-    throw new Error('Max retries reached');
 };
 
 export const tmdb = {
@@ -53,8 +60,8 @@ export const tmdb = {
 
     getTrending: async (page: number = 1): Promise<TMDBMovie[]> => {
         const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+        if (!apiKey) return [];
         try {
-            if (!apiKey) return [];
             const url = new URL(`${BASE_URL}/trending/movie/day`);
             url.searchParams.append('api_key', apiKey);
             url.searchParams.append('page', page.toString());
