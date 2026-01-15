@@ -306,6 +306,42 @@
       "slug": "lucifer_2019_malayalam_proper_unknown_720p",
       "title": "Lucifer [2019] Malayalam Proper",
       "year": "unknown"
+    },
+    {
+      "slug": "interstellar_2014_2160p",
+      "title": "Interstellar",
+      "year": "2014",
+      "quality": "2160p",
+      "size": "1.95 GB",
+      "codec": "10BIT HDR X265 HEVC PSA",
+      "language": "English",
+      "file_id": "BAACAgUAAyEFAATXOpYhAAID42lou-jvId3T8IdsaG62Z1pNWdskAAL7BAACIS-JV3F65xyJCrxUOAQ",
+      "caption": "Interstellar 2014 IMAX 2160p 10bit HDR BluRay 6CH x265 HEVC PSA",
+      "indexed_at": "2026-01-15T10:05:29.059Z"
+    },
+    {
+      "slug": "interstellar_2014_1080p",
+      "title": "Interstellar",
+      "year": "2014",
+      "quality": "1080p",
+      "size": "2.63 GB",
+      "codec": "X265 RARBG",
+      "language": "English",
+      "file_id": "BQACAgUAAyEFAATXOpYhAAID5Glou_t3_Zj-CCNOmj3spF8mZxYLAAJLDwACDiWxVTyMLU3NgybjOAQ",
+      "caption": "Interstellar 2014 PROPER 1080p BluRay x265 RARBG",
+      "indexed_at": "2026-01-15T10:05:47.770Z"
+    },
+    {
+      "slug": "interstellar_2014_720p",
+      "title": "Interstellar",
+      "year": "2014",
+      "quality": "720p",
+      "size": "1.55 GB",
+      "codec": "X264 PAHE",
+      "language": "English",
+      "file_id": "BQACAgEAAyEFAATXOpYhAAID5WlovCtRtQcRQPgDY6qYFaHveb1cAAJNAgACtlbIRq0IEI8BLh8eOAQ",
+      "caption": "Interstellar 2014 REMASTERED 720p BluRay x264 Pahe in",
+      "indexed_at": "2026-01-15T10:06:36.491Z"
     }
   ],
   "meta": {}
