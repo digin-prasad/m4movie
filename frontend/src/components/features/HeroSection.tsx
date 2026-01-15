@@ -116,9 +116,9 @@ export function HeroSection({ backgroundMovies }: HeroSectionProps) {
                 {isSearchActive && searchResults.length > 0 && (
                     <div className="w-full max-w-4xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-300 flex-1 overflow-hidden min-h-0 pointer-events-auto">
                         <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 overflow-y-auto max-h-[50vh] custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {searchResults.map((movie) => (
+                            {searchResults.map((movie, index) => (
                                 <Link
-                                    key={movie.id}
+                                    key={`${movie.id}-${index}`}
                                     href={`/movie/${movie.id}`}
                                     className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors group"
                                 >

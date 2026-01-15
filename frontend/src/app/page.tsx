@@ -15,7 +15,9 @@ export default async function Home() {
     tmdb.getAsianDramas(1)
   ]);
 
-  const allContent = [...trendingMovies, ...trendingSeries, ...anime, ...asianDramas];
+  // Deduplicate content for HeroSection (prevent duplicate key errors)
+  const allContentRaw = [...trendingMovies, ...trendingSeries, ...anime, ...asianDramas];
+  const allContent = Array.from(new Map(allContentRaw.map(item => [item.id, item])).values());
 
   return (
     <main className="min-h-screen bg-background text-foreground pb-20">

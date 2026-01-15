@@ -11,6 +11,8 @@ export interface TMDBMovie {
     release_date: string;
     first_air_date?: string; // For TV shows
     vote_average: number;
+    vote_count?: number;
+    popularity?: number; // Crucial for sorting relevance
     media_type?: string;
 }
 

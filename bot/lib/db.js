@@ -1,94 +1,171 @@
+const mongo = require('./mongo');
 const fs = require('fs');
 const path = require('path');
 
 const DB_PATH = path.join(__dirname, '../../shared/movies.json');
-const DEBOUNCE_TIME = 2000; // 2 seconds
+let cache = { movies: [], meta: {} };
+let isMongoConnected = false;
 
-let cache = null;
-let saveTimeout = null;
-
-const load = () => {
-    if (cache) return cache;
+// Initialize DB (Connect to Mongo, Load Local as Backup)
+const init = async () => {
+    // 1. Load Local first (fast startup)
     try {
-        const data = fs.readFileSync(DB_PATH, 'utf8');
-        cache = JSON.parse(data);
-        if (!cache.meta) cache.meta = {};
+        if (fs.existsSync(DB_PATH)) {
+            const data = fs.readFileSync(DB_PATH, 'utf8');
+            cache = JSON.parse(data);
+            if (!cache.meta) cache.meta = {};
+            console.log(`[DB] Loaded ${cache.movies.length} movies from local cache.`);
+        }
     } catch (e) {
-        console.error(`[DB] Error loading database: ${e.message}`);
-        cache = { movies: [], meta: {} };
+        console.error('[DB] Local load failed:', e.message);
     }
-    return cache;
+
+    // 2. Connect to Mongo
+    await mongo.connectToServer();
+    const db = mongo.getDb();
+
+    if (db) {
+        isMongoConnected = true;
+        console.log('[DB] Switching to MongoDB storage.');
+
+        // 3. Sync Logic: If Mongo is empty but we have local, UPLOAD it. (Migration)
+        try {
+            const count = await db.collection('movies').countDocuments();
+            if (count === 0 && cache.movies.length > 0) {
+                console.log('[DB] Migrating local movies to MongoDB...');
+                await db.collection('movies').insertMany(cache.movies);
+                console.log('[DB] Migration complete.');
+            } else if (count > 0) {
+                // If Mongo has data, use IT as the source of truth
+                const validMovies = await db.collection('movies').find({}).toArray();
+                // Map _id to clean objects if needed, or just replace cache
+                cache.movies = validMovies.map(m => {
+                    const { _id, ...rest } = m;
+                    return rest;
+                });
+                console.log(`[DB] Synced ${cache.movies.length} movies from MongoDB.`);
+            }
+        } catch (e) {
+            console.error('[DB] Mongo sync error:', e);
+        }
+    }
 };
 
-const save = () => {
-    if (!cache) return;
+// Start initialization immediately
+init();
 
-    // Clear any existing timeout
-    if (saveTimeout) {
-        clearTimeout(saveTimeout);
-    }
+const save = async () => {
+    // If Mongo is active, we don't need to manually "save" to disk often, 
+    // but we can keep local file updated as a backup/cache for the frontend if it's still reading file
+    // But ideally Frontend should read Mongo too.
 
-    // Set a new timeout to save after activity stops
-    saveTimeout = setTimeout(() => {
-        try {
-            // Write to a temporary file first for safety (optional but recommended)
-            const data = JSON.stringify(cache, null, 2);
-            fs.writeFileSync(DB_PATH, data);
-            fs.writeFileSync(DB_PATH, data);
-            saveTimeout = null;
-        } catch (e) {
-            console.error(`[DB] Error saving database: ${e.message}`);
-        }
-    }, DEBOUNCE_TIME);
+    // Write to local file for backup
+    try {
+        fs.writeFileSync(DB_PATH, JSON.stringify(cache, null, 2));
+    } catch (e) { /* ignore */ }
 };
 
 const getMovies = () => {
-    return load().movies;
+    return cache.movies;
 };
 
-const addMovie = (movie) => {
-    const db = load();
+const addMovie = async (movie) => {
+    // 1. Update in-memory cache
+    const existingIndex = cache.movies.findIndex(m => m.file_id === movie.file_id);
+    const now = new Date().toISOString();
 
-    // Duplicate check by file_id
-    const existingIndex = db.movies.findIndex(m => m.file_id === movie.file_id);
+    let movieToSave = { ...movie, indexed_at: now };
+
     if (existingIndex >= 0) {
-        db.movies[existingIndex] = { ...db.movies[existingIndex], ...movie, indexed_at: new Date().toISOString() };
+        cache.movies[existingIndex] = { ...cache.movies[existingIndex], ...movieToSave };
+        movieToSave = cache.movies[existingIndex];
     } else {
-        db.movies.push({ ...movie, indexed_at: new Date().toISOString() });
+        cache.movies.push(movieToSave);
     }
 
+    // 2. Save to Mongo
+    if (isMongoConnected) {
+        const db = mongo.getDb();
+        try {
+            await db.collection('movies').updateOne(
+                { file_id: movie.file_id },
+                { $set: movieToSave },
+                { upsert: true }
+            );
+            console.log(`[DB] Saved to MongoDB: ${movie.title}`);
+        } catch (e) {
+            console.error('[DB] Mongo save failed:', e);
+        }
+    }
+
+    // 3. Save Local
     save();
 };
 
 const findBySlug = (slug) => {
-    return load().movies.find(m => m.slug === slug);
+    return cache.movies.find(m => m.slug === slug);
 };
 
 const exists = (slug) => {
-    return load().movies.some(m => m.slug === slug);
+    return cache.movies.some(m => m.slug === slug);
 };
 
 const getMeta = (key) => {
-    return load().meta[key];
+    return cache.meta[key];
 };
 
-const updateMeta = (key, value) => {
-    const db = load();
-    db.meta[key] = value;
+const updateMeta = async (key, value) => {
+    cache.meta[key] = value;
     save();
+
+    // We can also store meta in a 'meta' collection in Mongo if we want perfect sync
+    // For now, local file meta (like last_id) is okay provided the bot container relies on persistent disk or internal state.
+    // Ideally, sync progress should go to Mongo too.
+    if (isMongoConnected) {
+        const db = mongo.getDb();
+        try {
+            await db.collection('meta').updateOne(
+                { key: key },
+                { $set: { value: value } },
+                { upsert: true }
+            );
+        } catch (e) { }
+    }
 };
 
-const getSyncProgress = (channelId) => {
-    const db = load();
-    if (!db.meta.sync_progress) db.meta.sync_progress = {};
-    return db.meta.sync_progress[channelId] || 0;
+const getSyncProgress = async (channelId) => {
+    // Try memory/local first
+    if (cache.meta.sync_progress && cache.meta.sync_progress[channelId]) {
+        return cache.meta.sync_progress[channelId];
+    }
+
+    // Try Mongo
+    if (isMongoConnected) {
+        const db = mongo.getDb();
+        const doc = await db.collection('meta').findOne({ key: 'sync_progress' });
+        if (doc && doc.value && doc.value[channelId]) {
+            return doc.value[channelId];
+        }
+    }
+
+    return 0;
 };
 
-const updateSyncProgress = (channelId, lastId) => {
-    const db = load();
-    if (!db.meta.sync_progress) db.meta.sync_progress = {};
-    db.meta.sync_progress[channelId] = lastId;
+const updateSyncProgress = async (channelId, lastId) => {
+    if (!cache.meta.sync_progress) cache.meta.sync_progress = {};
+    cache.meta.sync_progress[channelId] = lastId;
     save();
+
+    if (isMongoConnected) {
+        const db = mongo.getDb();
+        // We need to fetch current full object to update one key safely or use dot notation
+        // Simplest: just save the whole sync_progress object
+        await db.collection('meta').updateOne(
+            { key: 'sync_progress' },
+            { $set: { value: cache.meta.sync_progress } },
+            { upsert: true }
+        );
+    }
 };
 
 module.exports = {
@@ -100,5 +177,5 @@ module.exports = {
     updateMeta,
     getSyncProgress,
     updateSyncProgress,
-    load
+    load: init
 };
