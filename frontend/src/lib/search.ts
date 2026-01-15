@@ -5,6 +5,7 @@ import clientPromise from './mongodb';
 export interface LocalMovie {
     slug: string;
     title: string;
+    year: string;
     file_id: string;
     caption: string;
     indexed_at: string;
