@@ -5,13 +5,15 @@ import clientPromise from './mongodb';
 export interface LocalMovie {
     slug: string;
     title: string;
-    year: string;
-    quality: string;
     file_id: string;
     caption: string;
     indexed_at: string;
+    // Optional metadata
+    quality?: string;
     size?: string;
     codec?: string;
+    language?: string;
+    _id?: any; // MongoDB ID
 }
 
 // Helper to get Levenshtein distance
