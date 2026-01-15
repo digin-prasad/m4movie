@@ -133,6 +133,7 @@ async function hydrateMovies(localMovies: LocalMovie[]) {
                 slug: m.slug,
                 file_id: m.file_id,
                 year: m.year,
+                _id: m._id?.toString(), // Pass ID for React Keys
 
                 // Keep local data for badges (legacy/backup)
                 local_data: {
@@ -162,6 +163,7 @@ async function hydrateMovies(localMovies: LocalMovie[]) {
             slug: m.slug,
             file_id: m.file_id,
             year: m.year,
+            _id: m._id?.toString(), // Pass ID for React Keys
 
             local_data: true // Marker for frontend filtering
         };
