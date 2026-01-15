@@ -76,8 +76,9 @@ function parseFilename(raw: string): { title: string; year: string | undefined }
     // Actually, we WANT specific years from brackets if possible, but usually cleaning is safer.
 
     // Regex to find 4-digit year (19xx or 20xx)
-    const yearMatch = raw.match(/\b(19|20)\d{2}\b/);
-    const year = yearMatch ? yearMatch[0] : undefined;
+    // We remove \b boundary check to handle Lucifer_2019 (underscore is word char)
+    const yearMatch = raw.match(/(?:^|[_\W])((?:19|20)\d{2})(?:$|[_\W])/);
+    const year = yearMatch ? yearMatch[1] : undefined;
 
     // Get text BEFORE the year (usually the title)
     let title = raw;

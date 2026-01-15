@@ -68,8 +68,8 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
     // Filter files based on active tab
     const filteredFiles = downloads.filter(f => f.quality === activeTab);
 
-    // Extract available qualities dynamically
-    const availableQualities = Array.from(new Set(downloads.map(d => d.quality))).sort();
+    // Extract available qualities dynamically (filter out empty/null)
+    const availableQualities = Array.from(new Set(downloads.map(d => d.quality || 'Unknown'))).sort();
 
     // Auto-select tab logic
     useEffect(() => {

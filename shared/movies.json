@@ -208,6 +208,102 @@
       "file_id": "BQACAgQAAyEFAATXOpYhAAN9aWeZDITqYLUmPGunwlnRNNJhCAIAAnoKAALsM1FS2xCc_v4pYPI4BA",
       "caption": "Kaaval (2021) Malayalam 720p WEB DL DOLBY HEVC.mp4",
       "indexed_at": "2026-01-15T04:03:07.310Z"
+    },
+    {
+      "file_id": "BQACAgQAAyEFAATXOpYhAAID0GloiQxYJ6M9YW4mF9r0OYWmjMUbAAIQFQACSNapUa5eVXQRto0rOAQ",
+      "caption": "Naran (2005) Malayalam Proper True WEB DL X264 Mp3 600MB.mkv",
+      "codec": "X264",
+      "indexed_at": "2026-01-15T08:53:01.679Z",
+      "language": "Malayalam",
+      "quality": "unknown",
+      "size": "615.45 MB",
+      "slug": "naran_2005_unknown",
+      "title": "Naran",
+      "year": "2005"
+    },
+    {
+      "file_id": "BQACAgEAAyEFAATXOpYhAAID02loiQxmhXijGLEXegAB5ovextaLcAADAQACnrJwR7wWpBAUCnViOAQ",
+      "caption": "Naran.2005.1080p.10bit.SP.WEB-DL.AAC-2.0.x265.AVK.mkv",
+      "codec": "10BIT X265",
+      "indexed_at": "2026-01-15T08:53:01.681Z",
+      "language": "Unknown",
+      "quality": "1080p",
+      "size": "1.66 GB",
+      "slug": "naran_2005_1080p",
+      "title": "Naran",
+      "year": "2005"
+    },
+    {
+      "file_id": "BQACAgQAAyEFAATXOpYhAAID0mloiQxeY1fj9z5hI_CqPi1xkShfAAI1CQACubZpU7Tw_IaAY3xDOAQ",
+      "caption": "Naran.2005.480p.10bit.DVD.DD-5.1.x265.AVK.mkv",
+      "codec": "10BIT X265",
+      "indexed_at": "2026-01-15T08:53:01.680Z",
+      "language": "Unknown",
+      "quality": "480p",
+      "size": "1.55 GB",
+      "slug": "naran_2005_480p",
+      "title": "Naran",
+      "year": "2005"
+    },
+    {
+      "file_id": "BQACAgQAAyEFAATXOpYhAAID0WloiQzWVbSq4DNUvIyKajWLand9AAIkCAACcN6gUaSWs0dJZ1tiOAQ",
+      "caption": " Naran (2005) Malayalam HQ DVDRip X264 AAC 800MB .mkv",
+      "codec": "X264",
+      "indexed_at": "2026-01-15T08:53:01.680Z",
+      "language": "Malayalam",
+      "quality": "unknown",
+      "size": "843.43 MB",
+      "slug": "naran_2005_unknown_v2",
+      "title": "Naran",
+      "year": "2005"
+    },
+    {
+      "file_id": "BQACAgQAAyEFAATXOpYhAAIBV2lnmvM0gqfvme1p4-bYRsAP2WWiAAJyDAACKRHgUutgBQGm1gAB3TgE",
+      "caption": "Lucifer [2019] Malayalam Proper HDRip x264.mkv",
+      "codec": "HDR X264",
+      "indexed_at": "2026-01-15T09:24:37.798Z",
+      "language": "Malayalam",
+      "quality": "unknown",
+      "size": "445.75 MB",
+      "slug": "lucifer_2019_malayalam_proper_hdrip_x264_mkv_unknown_unknown",
+      "title": "Lucifer [2019] Malayalam Proper HDRip x264 mkv",
+      "year": "unknown"
+    },
+    {
+      "file_id": "BQACAgIAAyEFAATXOpYhAAIBWGlnmvNKUEXsY1HMUR6nX6lxKFEJAALDAwAC9uHhSpj49gABA3CuGjgE",
+      "caption": "Lucifer [2019] Malayalam Proper HDRip x264.mkv",
+      "codec": "HDR X264",
+      "indexed_at": "2026-01-15T09:24:37.802Z",
+      "language": "Malayalam",
+      "quality": "unknown",
+      "size": "731.49 MB",
+      "slug": "lucifer_2019_malayalam_proper_hdrip_x264_mkv_unknown_unknown_v2",
+      "title": "Lucifer [2019] Malayalam Proper HDRip x264 mkv",
+      "year": "unknown"
+    },
+    {
+      "file_id": "BQACAgIAAyEFAATXOpYhAAIBWWlnmvN9U8EYub7Vw2RUDS49Vw1oAAKxAgAC_9noSjTjW4f4qSD9OAQ",
+      "caption": "Lucifer_2019_Malayalam_Org_Proper.mkv",
+      "codec": "",
+      "indexed_at": "2026-01-15T09:24:37.802Z",
+      "language": "Malayalam",
+      "quality": "unknown",
+      "size": "942.23 MB",
+      "slug": "lucifer_2019_malayalam_org_proper_mkv_unknown_unknown",
+      "title": "Lucifer_2019_Malayalam_Org_Proper mkv",
+      "year": "unknown"
+    },
+    {
+      "file_id": "BQACAgQAAyEFAATXOpYhAAIBWmlnmvNgnf88M7Z237r2eM5e8xZyAALoDAACKRHgUsbugJsl3xayOAQ",
+      "caption": "Lucifer [2019] Malayalam Proper 720p HDRip x264 DD 5.1.mkv",
+      "codec": "HDR X264",
+      "indexed_at": "2026-01-15T09:24:37.803Z",
+      "language": "Malayalam",
+      "quality": "720p",
+      "size": "1.45 GB",
+      "slug": "lucifer_2019_malayalam_proper_unknown_720p",
+      "title": "Lucifer [2019] Malayalam Proper",
+      "year": "unknown"
     }
   ],
   "meta": {

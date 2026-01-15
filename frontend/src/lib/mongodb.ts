@@ -19,14 +19,24 @@ if (process.env.NODE_ENV === 'development') {
     }
 
     if (!globalWithMongo._mongoClientPromise) {
-        client = new MongoClient(uri, options)
-        globalWithMongo._mongoClientPromise = client.connect()
+        if (uri) {
+            client = new MongoClient(uri, options);
+            globalWithMongo._mongoClientPromise = client.connect();
+        } else {
+            console.warn("MongoDB URI is missing in development!");
+            globalWithMongo._mongoClientPromise = Promise.reject("MongoDB URI missing");
+        }
     }
     clientPromise = globalWithMongo._mongoClientPromise
 } else {
     // In production mode, it's best to not use a global variable.
-    client = new MongoClient(uri, options)
-    clientPromise = client.connect()
+    if (uri) {
+        client = new MongoClient(uri, options);
+        clientPromise = client.connect();
+    } else {
+        console.error("MongoDB URI is missing in production!");
+        clientPromise = Promise.reject("MongoDB URI missing");
+    }
 }
 
 // Export a module-scoped MongoClient promise. By doing this in a
