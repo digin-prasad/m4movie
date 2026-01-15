@@ -29,16 +29,21 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
     useEffect(() => {
         const fetchDownloads = async () => {
             try {
-                const res = await fetch('/api/movies');
+                // Fetch specific results for this movie title (Server Side Search)
+                const res = await fetch(`/api/movies?q=${encodeURIComponent(movieTitle)}`);
                 const data = await res.json();
 
-                // Flexible matching: Match by Title (case-insensitive)
-                // In production, matching by TMDB ID would be better if indexed
-                const matches = data.movies?.filter((m: any) => {
-                    // Normalize helper: remove special chars, lowercase
+                // Handle API response (Array)
+                const results = Array.isArray(data) ? data : (data.movies || []);
+
+                // Filter to ensure we only show LOCAL files that match this movie
+                // And ensure we have local_data (meaning it's a file, not just a global search result)
+                const matches = results.filter((m: any) => {
+                    if (!m.local_data) return false; // Must be a local file
+
                     const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
                     return normalize(m.title).includes(normalize(movieTitle)) || normalize(movieTitle).includes(normalize(m.title));
-                }) || [];
+                });
 
                 setDownloads(matches);
 
