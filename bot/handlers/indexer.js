@@ -15,8 +15,36 @@ const processMessage = async (message) => {
     const caption = originalText;
 
     // Improved Parsing Logic for Scene Releases
-    const qualityMatch = caption.match(/(480p|720p|1080p|2160p|4k)/i);
-    const quality = qualityMatch ? qualityMatch[0].toLowerCase() : 'unknown';
+    // 1. Explicit Quality (e.g. 1080p)
+    let qualityMatch = caption.match(/(480p|576p|720p|1080p|2160p|4k)/i);
+    let quality = qualityMatch ? qualityMatch[0].toLowerCase() : null;
+
+    // 2. Source-based Heuristics (if explicit quality missing)
+    if (!quality) {
+        if (/(dvdrip|dvd|vcd)/i.test(caption)) quality = '480p';
+        else if (/(web-dl|webdl|webrip|hdrip|hd-rip)/i.test(caption)) quality = '720p'; // Assume HD for WEB-DL
+        else if (/(bluray|bdrip|brrip)/i.test(caption)) quality = '1080p'; // Assume Full HD for Bluray
+    }
+
+    const sizeBytes = media.file_size || 0;
+    const formatSize = (bytes) => {
+        if (bytes === 0) return 'Unknown Size';
+        const k = 1024;
+        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    };
+    const size = formatSize(sizeBytes);
+
+    // 3. Size-based Fallback (Last Resort)
+    if (!quality && sizeBytes > 0) {
+        const gb = sizeBytes / (1024 * 1024 * 1024);
+        if (gb > 2.5) quality = '1080p';
+        else if (gb > 0.6) quality = '720p';
+        else quality = '480p';
+    }
+
+    quality = quality || 'unknown';
 
     const yearMatch = caption.match(/(?:^|[.\s\(])(19\d{2}|20\d{2})(?:$|[.\s\)])/);
     const year = yearMatch ? yearMatch[1] : 'unknown';
@@ -25,26 +53,12 @@ const processMessage = async (message) => {
     if (year !== 'unknown') {
         const yearIndex = caption.indexOf(year);
         title = caption.substring(0, yearIndex);
-    } else if (quality !== 'unknown') {
+    }
+    // If we matched quality from regex, use it to cut title
+    else if (qualityMatch) {
         const qualityIndex = caption.indexOf(qualityMatch[0]);
         title = caption.substring(0, qualityIndex);
     }
-
-    const codecMatch = caption.match(/(x264|x265|hevc|h\.?264|h\.?265|av1|vp9|10bit|hdr)/gi);
-    const codec = codecMatch ? codecMatch.join(' ').toUpperCase() : '';
-
-    const langMatch = caption.match(/(hindi|english|tamil|telugu|malayalam|kannada|bengali|punjabi|multi|dual[\s-]?audio)/gi);
-    const language = langMatch ? langMatch.map(l => l.charAt(0).toUpperCase() + l.slice(1).toLowerCase()).join(' ') : 'Unknown';
-
-    const sizeBytes = media.file_size || 0;
-    const formatSize = (bytes) => {
-        if (bytes === 0) return 'Unknown';
-        const k = 1024;
-        const sizes = ['B', 'KB', 'MB', 'GB', 'TB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-    };
-    const size = formatSize(sizeBytes);
 
     title = title.replace(/[.\(\)]/g, ' ').trim();
     title = title.replace(/\s+/g, ' ');

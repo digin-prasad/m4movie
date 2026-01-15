@@ -40,10 +40,11 @@
       "quality": "1080p",
       "file_id": "BQACAgQAAyEFAATXOpYhAAMjaWcgfQnT8mBFDGsa7gbxGOhB_OYAAskdAAJ2lNFRaR_P5mDoNL44BA",
       "caption": "Thudarum.2025.1080p.AV1.DS4K.10bit.HS.WEBRip.DDP.5.1.224k.Esub-KC.mkv\n\n🎬 1080p AV1 10bit ⏳ 02:44:58\n🔊 Malayalam\n💬 ESUB\n\n➠Latest Uploads:@ProSearchZ\n ➠BOT Updates:@ProSearch",
-      "indexed_at": "2026-01-14T04:50:05.688Z"
+      "indexed_at": "2026-01-14T04:50:05.688Z",
+      "size": "Unknown Size"
     },
     {
-      "slug": "predator_badlands_2025_720p_v2",
+      "slug": "predator_badlands_2025_720p",
       "title": "Predator Badlands",
       "year": "2025",
       "quality": "720p",
@@ -54,10 +55,10 @@
       "indexed_at": "2026-01-14T10:10:38.433Z"
     },
     {
-      "slug": "the_goop_lab_s01e01_web_intermedia_mp4_unknown_unknown",
+      "slug": "the_goop_lab_s01e01_web_intermedia_mp4_unknown_480p",
       "title": "The Goop Lab S01E01 Web @intermedia mp4",
       "year": "unknown",
-      "quality": "unknown",
+      "quality": "480p",
       "size": "335.51 MB",
       "codec": "",
       "language": "Unknown",
@@ -102,10 +103,10 @@
       "indexed_at": "2026-01-15T02:26:30.674Z"
     },
     {
-      "slug": "julie_2_2017_unknown",
+      "slug": "julie_2_2017_720p",
       "title": "Julie 2",
       "year": "2017",
-      "quality": "unknown",
+      "quality": "720p",
       "size": "663.92 MB",
       "codec": "HDR X264",
       "language": "Hindi",
@@ -114,10 +115,10 @@
       "indexed_at": "2026-01-15T04:02:06.269Z"
     },
     {
-      "slug": "_tamilrookers_sringara_velan_2013_unknown",
+      "slug": "_tamilrookers_sringara_velan_2013_720p",
       "title": "@tamilrookers Sringara Velan",
       "year": "2013",
-      "quality": "unknown",
+      "quality": "720p",
       "size": "572.16 MB",
       "codec": "HDR",
       "language": "Tamil Malayalam",
@@ -126,10 +127,10 @@
       "indexed_at": "2026-01-15T04:02:06.269Z"
     },
     {
-      "slug": "_wmr_harry_potter_and_the_half_blood_mkv_unknown_unknown",
+      "slug": "_wmr_harry_potter_and_the_half_blood_mkv_unknown_720p",
       "title": "@WMR_Harry_Potter_and_the_Half_Blood mkv",
       "year": "unknown",
-      "quality": "unknown",
+      "quality": "720p",
       "size": "858.91 MB",
       "codec": "",
       "language": "Unknown",
@@ -138,10 +139,10 @@
       "indexed_at": "2026-01-15T04:02:06.269Z"
     },
     {
-      "slug": "argentina_fans_kaattoorkadavu_2019_unknown",
+      "slug": "argentina_fans_kaattoorkadavu_2019_720p",
       "title": "Argentina Fans Kaattoorkadavu",
       "year": "2019",
-      "quality": "unknown",
+      "quality": "720p",
       "size": "401.22 MB",
       "codec": "HDR",
       "language": "Malayalam",
@@ -198,7 +199,7 @@
       "indexed_at": "2026-01-15T04:03:07.310Z"
     },
     {
-      "slug": "kaaval_2021_720p_v2",
+      "slug": "kaaval_2021_720p",
       "title": "Kaaval",
       "year": "2021",
       "quality": "720p",
@@ -213,11 +214,11 @@
       "file_id": "BQACAgQAAyEFAATXOpYhAAID0GloiQxYJ6M9YW4mF9r0OYWmjMUbAAIQFQACSNapUa5eVXQRto0rOAQ",
       "caption": "Naran (2005) Malayalam Proper True WEB DL X264 Mp3 600MB.mkv",
       "codec": "X264",
-      "indexed_at": "2026-01-15T08:53:01.679Z",
+      "indexed_at": "2026-01-15T09:32:43.850Z",
       "language": "Malayalam",
-      "quality": "unknown",
+      "quality": "720p",
       "size": "615.45 MB",
-      "slug": "naran_2005_unknown",
+      "slug": "naran_2005_720p",
       "title": "Naran",
       "year": "2005"
     },
@@ -225,7 +226,7 @@
       "file_id": "BQACAgEAAyEFAATXOpYhAAID02loiQxmhXijGLEXegAB5ovextaLcAADAQACnrJwR7wWpBAUCnViOAQ",
       "caption": "Naran.2005.1080p.10bit.SP.WEB-DL.AAC-2.0.x265.AVK.mkv",
       "codec": "10BIT X265",
-      "indexed_at": "2026-01-15T08:53:01.681Z",
+      "indexed_at": "2026-01-15T09:32:43.853Z",
       "language": "Unknown",
       "quality": "1080p",
       "size": "1.66 GB",
@@ -237,7 +238,7 @@
       "file_id": "BQACAgQAAyEFAATXOpYhAAID0mloiQxeY1fj9z5hI_CqPi1xkShfAAI1CQACubZpU7Tw_IaAY3xDOAQ",
       "caption": "Naran.2005.480p.10bit.DVD.DD-5.1.x265.AVK.mkv",
       "codec": "10BIT X265",
-      "indexed_at": "2026-01-15T08:53:01.680Z",
+      "indexed_at": "2026-01-15T09:32:43.852Z",
       "language": "Unknown",
       "quality": "480p",
       "size": "1.55 GB",
@@ -249,11 +250,11 @@
       "file_id": "BQACAgQAAyEFAATXOpYhAAID0WloiQzWVbSq4DNUvIyKajWLand9AAIkCAACcN6gUaSWs0dJZ1tiOAQ",
       "caption": " Naran (2005) Malayalam HQ DVDRip X264 AAC 800MB .mkv",
       "codec": "X264",
-      "indexed_at": "2026-01-15T08:53:01.680Z",
+      "indexed_at": "2026-01-15T09:32:43.851Z",
       "language": "Malayalam",
-      "quality": "unknown",
+      "quality": "480p",
       "size": "843.43 MB",
-      "slug": "naran_2005_unknown_v2",
+      "slug": "naran_2005_480p",
       "title": "Naran",
       "year": "2005"
     },
@@ -263,9 +264,9 @@
       "codec": "HDR X264",
       "indexed_at": "2026-01-15T09:28:50.838Z",
       "language": "Malayalam",
-      "quality": "unknown",
+      "quality": "720p",
       "size": "445.75 MB",
-      "slug": "lucifer_2019_malayalam_proper_hdrip_x264_mkv_unknown_unknown",
+      "slug": "lucifer_2019_malayalam_proper_hdrip_x264_mkv_unknown_720p",
       "title": "Lucifer [2019] Malayalam Proper HDRip x264 mkv",
       "year": "unknown"
     },
@@ -275,9 +276,9 @@
       "codec": "HDR X264",
       "indexed_at": "2026-01-15T09:28:50.841Z",
       "language": "Malayalam",
-      "quality": "unknown",
+      "quality": "720p",
       "size": "731.49 MB",
-      "slug": "lucifer_2019_malayalam_proper_hdrip_x264_mkv_unknown_unknown_v2",
+      "slug": "lucifer_2019_malayalam_proper_hdrip_x264_mkv_unknown_720p",
       "title": "Lucifer [2019] Malayalam Proper HDRip x264 mkv",
       "year": "unknown"
     },
@@ -287,9 +288,9 @@
       "codec": "",
       "indexed_at": "2026-01-15T09:28:50.841Z",
       "language": "Malayalam",
-      "quality": "unknown",
+      "quality": "720p",
       "size": "942.23 MB",
-      "slug": "lucifer_2019_malayalam_org_proper_mkv_unknown_unknown",
+      "slug": "lucifer_2019_malayalam_org_proper_mkv_unknown_720p",
       "title": "Lucifer_2019_Malayalam_Org_Proper mkv",
       "year": "unknown"
     },
@@ -306,10 +307,5 @@
       "year": "unknown"
     }
   ],
-  "meta": {
-    "sync_progress": {
-      "-1003610940961": 21,
-      "-1001560435778": 256
-    }
-  }
+  "meta": {}
 }
