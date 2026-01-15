@@ -166,6 +166,7 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                     filteredFiles.map((file) => (
                         <div
                             key={file.slug || file.id}
+                            key={file.slug || file._id || i}
                             className="group flex flex-col md:flex-row items-start md:items-center justify-between p-4 rounded-xl bg-card/50 border border-white/5 hover:border-primary/50 hover:bg-card transition-all duration-150 gap-4"
                         >
                             <div className="flex-1 min-w-0">

@@ -125,7 +125,16 @@ async function hydrateMovies(localMovies: LocalMovie[]) {
                 vote_count: tmdbMeta.vote_count,
                 popularity: tmdbMeta.popularity,
                 media_type: 'movie',
-                // Keep local data for badges
+
+                // Top Level Metadata for DownloadSection
+                quality: m.quality,
+                size: m.size,
+                codec: m.codec,
+                slug: m.slug,
+                file_id: m.file_id,
+                year: m.year,
+
+                // Keep local data for badges (legacy/backup)
                 local_data: {
                     quality: m.quality,
                     size: m.size,
@@ -144,7 +153,17 @@ async function hydrateMovies(localMovies: LocalMovie[]) {
             backdrop_path: null,
             release_date: m.year !== 'unknown' ? `${m.year}-01-01` : '2000-01-01',
             vote_average: 10,
-            media_type: 'movie'
+            media_type: 'movie',
+
+            // Top Level Metadata
+            quality: m.quality,
+            size: m.size,
+            codec: m.codec,
+            slug: m.slug,
+            file_id: m.file_id,
+            year: m.year,
+
+            local_data: true // Marker for frontend filtering
         };
     }));
 }
