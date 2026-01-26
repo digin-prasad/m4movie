@@ -14,17 +14,21 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
 
     // Helper to clean title for better search results
     const cleanTitle = (t: string) => {
-        return t.toLowerCase()
+        let cleaned = t.toLowerCase();
+
+        // 1. Aggressive Truncation for TV Shows
+        // If we see "S01", "Season 1", "1x01", etc., we assume everything BEFORE is the title
+        // and everything AFTER is metadata/junk.
+        const tvPattern = /(?:s\d+(?:\s*e\d+)?|season\s*\d+|\d+x\d+|episode\s*\d+)/;
+        const match = cleaned.match(tvPattern);
+
+        if (match && match.index! > 0) {
+            cleaned = cleaned.substring(0, match.index);
+        }
+
+        // 2. Standard Cleaning
+        return cleaned
             .replace(/\b(19|20)\d{2}\b/g, '') // Remove Year
-            .replace(/s\d+\s*e\d+/g, '')      // Remove S01E01 or S01 E01
-            .replace(/s\d+/g, '')             // Remove S01
-            .replace(/\d+x\d+/g, '')          // Remove 1x01
-            .replace(/season\s*\d+/g, '')     // Remove Season 1
-            .replace(/episode\s*\d+/g, '')    // Remove Episode 1
-            .replace(/episode\s*\d+/g, '')    // Remove Episode 1
-            .replace(/\b(4k|2160p|1080p|720p|480p|bluray|web-dl|webrip|x264|x265|hevc|aac|ac3|dts)\b/g, '') // Remove Quality
-            .replace(/\b(internal|proper|repack|remux|hulu|amzn|nf|netflix|dsnp|hbo|max)\b/gi, '') // Remove Scene Tags
-            .replace(/\.(mkv|mp4|avi|mov|flv|wmv)\b/g, '') // Remove Extensions
             .replace(/[.\-_]/g, ' ')          // Replace separators with space
             .replace(/\s+/g, ' ')             // Collapse spaces
             .trim();
