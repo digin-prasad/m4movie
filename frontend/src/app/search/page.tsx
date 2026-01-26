@@ -74,7 +74,8 @@ export default async function SearchPage({ searchParams }: Props) {
     // 2. Global Search (Franchise/Related)
     let globalMovies: TMDBMovie[] = [];
     if (query) {
-        const rawGlobal = await tmdb.searchMovies(query);
+        // Use Multi-Search to include TV Shows (Anime, Dramas, Series)
+        const rawGlobal = await tmdb.searchMulti(query);
 
         // Filter out items we already have in local
         // And Sort by Popularity to highlight the Franchise

@@ -59,7 +59,8 @@ export async function GET(request: NextRequest) {
         let globalMovies: TMDBMovie[] = [];
         if (query.trim().length > 0 && !ungroup) {
             try {
-                const rawGlobal = await tmdb.searchMovies(query);
+                // Use Multi-Search (Movies + TV) instead of just Movies
+                const rawGlobal = await tmdb.searchMulti(query);
                 globalMovies = rawGlobal
                     .filter(m => !localIds.has(m.id)) // Deduplicate against local
                     .sort((a, b) => (b.popularity || 0) - (a.popularity || 0)); // Sort by Fame

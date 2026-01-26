@@ -134,36 +134,42 @@ export function SearchBar({
                                 <h3 className="text-xs font-semibold text-muted-foreground mb-2 px-2 uppercase tracking-wider">
                                     {query ? 'Search Results' : 'Trending'}
                                 </h3>
-                                {results.map((movie) => (
-                                    <Link
-                                        key={movie.id}
-                                        href={`/movie/${movie.id}`}
-                                        onClick={() => setIsOpen(false)}
-                                        className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/5 transition-colors group"
-                                    >
-                                        <div className="relative w-12 h-16 flex-shrink-0 bg-muted rounded overflow-hidden">
-                                            <Image
-                                                src={tmdb.getImage(movie.poster_path, 'w92')}
-                                                alt={movie.title}
-                                                fill
-                                                unoptimized
-                                                className="object-cover"
-                                            />
-                                        </div>
-                                        <div className="flex-1 min-w-0">
-                                            <h4 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
-                                                {movie.title}
-                                            </h4>
-                                            <div className="flex items-center text-xs text-muted-foreground mt-0.5 space-x-2">
-                                                <span>{movie.release_date?.split('-')[0] || 'N/A'}</span>
-                                                <span>•</span>
-                                                <span className="flex items-center text-yellow-500">
-                                                    ★ {movie.vote_average.toFixed(1)}
-                                                </span>
+                                {results.map((movie) => {
+                                    // Determine correct link
+                                    const isTv = (movie as any).media_type === 'tv' || (!movie.title && !!movie.name);
+                                    const href = isTv ? `/tv/${movie.id}` : `/movie/${movie.id}`;
+
+                                    return (
+                                        <Link
+                                            key={movie.id}
+                                            href={href}
+                                            onClick={() => setIsOpen(false)}
+                                            className="flex items-center gap-4 p-2 rounded-lg hover:bg-white/5 transition-colors group"
+                                        >
+                                            <div className="relative w-12 h-16 flex-shrink-0 bg-muted rounded overflow-hidden">
+                                                <Image
+                                                    src={tmdb.getImage(movie.poster_path, 'w92')}
+                                                    alt={movie.title}
+                                                    fill
+                                                    unoptimized
+                                                    className="object-cover"
+                                                />
                                             </div>
-                                        </div>
-                                    </Link>
-                                ))}
+                                            <div className="flex-1 min-w-0">
+                                                <h4 className="text-sm font-medium text-foreground truncate group-hover:text-primary transition-colors">
+                                                    {movie.title}
+                                                </h4>
+                                                <div className="flex items-center text-xs text-muted-foreground mt-0.5 space-x-2">
+                                                    <span>{movie.release_date?.split('-')[0] || 'N/A'}</span>
+                                                    <span>•</span>
+                                                    <span className="flex items-center text-yellow-500">
+                                                        ★ {movie.vote_average.toFixed(1)}
+                                                    </span>
+                                                </div>
+                                            </div>
+                                        </Link>
+                                    );
+                                })}
                             </div>
                         )}
 

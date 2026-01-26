@@ -100,6 +100,28 @@ export const tmdb = {
         }
     },
 
+    searchMulti: async (query: string): Promise<TMDBMovie[]> => {
+        const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
+        if (!query || !apiKey) return [];
+        try {
+            const url = new URL(`${BASE_URL}/search/multi`);
+            url.searchParams.append('api_key', apiKey);
+            url.searchParams.append('query', query);
+
+            const res = await fetchWithRetry(url.toString(), {
+                next: { revalidate: 3600 }
+            });
+            const data = await res.json();
+
+            // Filter to only Movie and TV (ignore 'person')
+            const results = data.results || [];
+            return results.filter((item: any) => item.media_type === 'movie' || item.media_type === 'tv');
+        } catch (error) {
+            console.warn("TMDB Multi Search Error", error);
+            return [];
+        }
+    },
+
     getTrendingSeries: async (page: number = 1): Promise<TMDBMovie[]> => {
         const apiKey = process.env.NEXT_PUBLIC_TMDB_API_KEY;
         if (!apiKey) return [];
