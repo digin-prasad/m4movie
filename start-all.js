@@ -37,10 +37,30 @@ botProc.on('error', (err) => {
 });
 
 // 2. Start the Frontend (Next.js)
+// 2. Start the Frontend (Next.js)
 const isDev = process.argv.includes('--dev');
 const npmCmd = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const frontendDir = path.join(__dirname, 'frontend');
+
+// Robustness: Build if missing (Fix for Render "No production build" error)
+// This ensures that if the Build Command didn't run, we build at runtime.
+if (!isDev) {
+    const fs = require('fs');
+    const nextDir = path.join(frontendDir, '.next');
+    if (!fs.existsSync(nextDir)) {
+        console.log('⚠️  Frontend build missing (.next folder not found). Building now... this might take a minute.');
+        try {
+            execSync(`${npmCmd} run build`, { cwd: frontendDir, stdio: 'inherit' });
+            console.log('✅ Build completed successfully.');
+        } catch (err) {
+            console.error('❌ Build failed during startup:', err);
+            // We continue anyway, letting next start fail naturally if it must, so logs show the real error
+        }
+    }
+}
+
 const frontendProc = spawn(npmCmd, isDev ? ['run', 'dev'] : ['start'], {
-    cwd: path.join(__dirname, 'frontend'),
+    cwd: frontendDir,
     stdio: 'inherit',
     shell: true
 });
