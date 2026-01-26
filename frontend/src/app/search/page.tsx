@@ -11,14 +11,38 @@ type Props = {
 async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[]> {
     // We can't use the API route URL efficiently here, so we use direct logic
     // This effectively "promotes" local files to have TMDB metadata if possible
+    // Helper to clean title for better search results
+    const cleanTitle = (t: string) => {
+        return t.toLowerCase()
+            .replace(/\b(19|20)\d{2}\b/g, '') // Remove Year
+            .replace(/s\d+(e\d+)?/g, '')      // Remove S01E01
+            .replace(/season\s*\d+/g, '')     // Remove Season 1
+            .replace(/\b(4k|2160p|1080p|720p|480p|bluray|web-dl|webrip|x264|x265|hevc|aac|ac3|dts)\b/g, '') // Remove Quality
+            .replace(/[.\-_]/g, ' ')          // Replace separators with space
+            .replace(/\s+/g, ' ')             // Collapse spaces
+            .trim();
+    };
+
     const hydrated = await Promise.all(localMovies.map(async (m) => {
-        // Try to match with TMDB to get real ID/Images
+        // Clean the title before searching to improve hit rate
+        const searchTitle = cleanTitle(m.title);
+
         // USE MULTI SEARCH to distinguish between Movie and TV
-        const globalMatches = await tmdb.searchMulti(m.title);
+        const globalMatches = await tmdb.searchMulti(searchTitle);
 
         // Find rough match with year if possible
         const bestMatch = globalMatches.find(g => {
-            const titleMatch = (g.title || g.name || '').toLowerCase() === m.title.toLowerCase();
+            const tmdbTitle = (g.title || g.name || '').toLowerCase();
+            const localTitle = m.title.toLowerCase();
+            const searchTitleClean = searchTitle;
+
+            // 1. Strict-ish Match (ignoring case and "The")
+            const cleanTmdb = tmdbTitle.replace(/^the\s+/, '');
+            const cleanLocal = searchTitleClean.replace(/^the\s+/, '');
+
+            // Check if one contains the other (fuzzy)
+            const titleMatch = cleanTmdb === cleanLocal || cleanTmdb.includes(cleanLocal) || cleanLocal.includes(cleanTmdb);
+
             if (!titleMatch) return false;
 
             if (m.year === 'unknown') return true;
