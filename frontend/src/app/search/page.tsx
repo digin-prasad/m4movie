@@ -22,6 +22,7 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
             .replace(/season\s*\d+/g, '')     // Remove Season 1
             .replace(/episode\s*\d+/g, '')    // Remove Episode 1
             .replace(/\b(4k|2160p|1080p|720p|480p|bluray|web-dl|webrip|x264|x265|hevc|aac|ac3|dts)\b/g, '') // Remove Quality
+            .replace(/\.(mkv|mp4|avi|mov|flv|wmv)\b/g, '') // Remove Extensions
             .replace(/[.\-_]/g, ' ')          // Replace separators with space
             .replace(/\s+/g, ' ')             // Collapse spaces
             .trim();
