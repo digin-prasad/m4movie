@@ -51,10 +51,11 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
 
             if (!titleMatch) return false;
 
-            if (m.year === 'unknown') return true;
+            // SPECIAL TV LOGIC: If it looks like a TV show (S01E01), IGNORE YEAR Check.
+            // Episodes often have years different from the series start date.
+            if (isTvSignature) return true;
 
-            // If TV, year check can be loose (first_air_date)
-            // If Movie, year check should be stricter?
+            if (m.year === 'unknown' || m.year === '2000') return true; // Treat 2000 as unknown/fallback
 
             const releaseDate = g.release_date || g.first_air_date || '';
             // Relaxed Year Check: Allow +/- 1 year difference or simple startsWith
