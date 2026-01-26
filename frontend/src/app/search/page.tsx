@@ -13,23 +13,32 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
     // This effectively "promotes" local files to have TMDB metadata if possible
     const hydrated = await Promise.all(localMovies.map(async (m) => {
         // Try to match with TMDB to get real ID/Images
-        const globalMatches = await tmdb.searchMovies(m.title);
+        // USE MULTI SEARCH to distinguish between Movie and TV
+        const globalMatches = await tmdb.searchMulti(m.title);
+
         // Find rough match with year if possible
-        const bestMatch = globalMatches.find(g =>
-            g.title.toLowerCase() === m.title.toLowerCase() &&
-            (m.year === 'unknown' || g.release_date?.startsWith(m.year))
-        ) || globalMatches[0];
+        const bestMatch = globalMatches.find(g => {
+            const titleMatch = (g.title || g.name || '').toLowerCase() === m.title.toLowerCase();
+            if (!titleMatch) return false;
+
+            if (m.year === 'unknown') return true;
+
+            const releaseDate = g.release_date || g.first_air_date || '';
+            return releaseDate.startsWith(m.year);
+        }) || globalMatches[0];
 
         if (bestMatch) {
             return {
                 ...bestMatch,
                 // Override overview to show it's OUR file
-                overview: `[LOCAL AVAILABLE] ${m.quality} • ${m.size} • ${m.codec}\n${bestMatch.overview}`,
+                overview: `[LOCAL AVAILABLE] ${m.quality || 'Unknown'} • ${m.size || 'Unknown'} • ${m.codec || 'Unknown'}\n${bestMatch.overview}`,
                 local_data: {
                     quality: m.quality,
                     size: m.size,
                     codec: m.codec
-                }
+                },
+                // Ensure media_type is set for the card link
+                media_type: bestMatch.media_type || (bestMatch.first_air_date ? 'tv' : 'movie')
             } as TMDBMovie;
         }
 
@@ -38,12 +47,12 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
             id: stringToHash(m.file_id),
             title: m.title,
             original_title: m.title,
-            overview: `${m.quality} • ${m.size} • ${m.codec}\n${m.caption}`,
+            overview: `${m.quality || 'Unknown'} • ${m.size || 'Unknown'} • ${m.codec || 'Unknown'}\n${m.caption}`,
             poster_path: null,
             backdrop_path: null,
             release_date: m.year !== 'unknown' ? `${m.year}-01-01` : '2000-01-01',
             vote_average: 10,
-            media_type: 'movie'
+            media_type: 'movie' // Fallback to movie if unknown
         } as TMDBMovie;
     }));
 
