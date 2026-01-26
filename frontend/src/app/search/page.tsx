@@ -30,8 +30,14 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
         // USE MULTI SEARCH to distinguish between Movie and TV
         const globalMatches = await tmdb.searchMulti(searchTitle);
 
+        // Check for TV signatures in original title (before cleaning)
+        const isTvSignature = /s\d+(e\d+)?/i.test(m.title) || /season/i.test(m.title) || /\b(complete|episode|ep)\b/i.test(m.title);
+
         // Find rough match with year if possible
         const bestMatch = globalMatches.find(g => {
+            // If local file matches TV pattern, STRICTLY ignore movies
+            if (isTvSignature && g.media_type === 'movie') return false;
+
             const tmdbTitle = (g.title || g.name || '').toLowerCase();
             const localTitle = m.title.toLowerCase();
             const searchTitleClean = searchTitle;
@@ -47,6 +53,9 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
 
             if (m.year === 'unknown') return true;
 
+            // If TV, year check can be loose (first_air_date)
+            // If Movie, year check should be stricter?
+
             const releaseDate = g.release_date || g.first_air_date || '';
             // Relaxed Year Check: Allow +/- 1 year difference or simple startsWith
             if (releaseDate.startsWith(m.year)) return true;
@@ -60,7 +69,7 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
             }
 
             return false;
-        }) || globalMatches[0];
+        }) || (isTvSignature ? globalMatches.find(g => g.media_type === 'tv') : globalMatches[0]);
 
         if (bestMatch) {
             return {
