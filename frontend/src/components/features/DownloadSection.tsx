@@ -45,7 +45,10 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                     .map((m: any) => {
                         // Parse Season from Title (e.g. S01, Season 1, S1)
                         let season: number | 'movie' = 'movie';
-                        const sMatch = m.title.match(/(?:^|[_\s\.\[\(])(?:S|Season)\s*(\d{1,2})(?:[_\s\.\]\)]|$|E)/i);
+                        // PREFER original_title (filename) because m.title might be the clean TMDB title (e.g. "Game of Thrones")
+                        const titleToSearch = m.original_title || m.title || '';
+
+                        const sMatch = titleToSearch.match(/(?:^|[_\s\.\[\(])(?:S|Season)\s*(\d{1,2})(?:[_\s\.\]\)]|$|E)/i);
                         if (sMatch) {
                             season = parseInt(sMatch[1], 10);
                         }
