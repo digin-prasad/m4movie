@@ -14,9 +14,14 @@ export function MovieCard({ movie, className }: MovieCardProps) {
     const date = movie.release_date || movie.first_air_date;
     const year = date ? date.split('-')[0] : 'N/A';
 
+    // Heuristic: If it has a 'name' but no 'title', or media_type is 'tv', it's a TV show.
+    // This prevents "Home Alone" (TV Show) linking to "Home Alone" (Movie) which share IDs.
+    const isTv = (movie as any).media_type === 'tv' || (!movie.title && !!movie.name);
+    const href = isTv ? `/tv/${movie.id}` : `/movie/${movie.id}`;
+
     return (
         <Link
-            href={`/movie/${movie.id}`}
+            href={href}
             className={cn(
                 "group relative block overflow-hidden rounded-xl bg-card transition-all hover:scale-105 hover:shadow-xl hover:shadow-primary/20 isolate",
                 className
