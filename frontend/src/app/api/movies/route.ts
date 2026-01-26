@@ -80,52 +80,92 @@ export async function GET(request: NextRequest) {
     }
 }
 
-// Helper to clean filenames for TMDB search
-function parseFilename(raw: string): { title: string; year: string | undefined } {
-    // 1. Remove brackets/parentheses and their content often containing irrelevants like [Malayalam] or (2019)
-    // Actually, we WANT specific years from brackets if possible, but usually cleaning is safer.
-
-    // Regex to find 4-digit year (19xx or 20xx)
-    // We remove \b boundary check to handle Lucifer_2019 (underscore is word char)
-    const yearMatch = raw.match(/(?:^|[_\W])((?:19|20)\d{2})(?:$|[_\W])/);
-    const year = yearMatch ? yearMatch[1] : undefined;
-
-    // Get text BEFORE the year (usually the title)
-    let title = raw;
-    if (year) {
-        title = raw.split(year)[0];
-    }
-
-    // Clean separators and common junk
-    title = title
-        .replace(/[._()[\]-]/g, ' ') // Replace dots, underscores, brackets with space
-        .replace(/\b(1080p|720p|480p|WEB-DL|BluRay|HDRip|DVDRip|X264|HEVC)\b/gi, '') // Remove quality tags
+// Helper to clean filenames for TMDB search (Synced with page.tsx)
+function cleanTitle(t: string) {
+    return t.toLowerCase()
+        .replace(/\b(19|20)\d{2}\b/g, '') // Remove Year
+        .replace(/s\d+\s*e\d+/g, '')      // Remove S01E01 or S01 E01
+        .replace(/s\d+/g, '')             // Remove S01
+        .replace(/\d+x\d+/g, '')          // Remove 1x01
+        .replace(/season\s*\d+/g, '')     // Remove Season 1
+        .replace(/episode\s*\d+/g, '')    // Remove Episode 1
+        .replace(/\b(4k|2160p|1080p|720p|480p|bluray|web-dl|webrip|x264|x265|hevc|aac|ac3|dts)\b/g, '') // Remove Quality
+        .replace(/\.(mkv|mp4|avi|mov|flv|wmv)\b/g, '') // Remove Extensions
+        .replace(/[.\-_]/g, ' ')          // Replace separators with space
+        .replace(/\s+/g, ' ')             // Collapse spaces
         .trim();
-
-    return { title, year };
 }
 
 async function hydrateMovies(localMovies: LocalMovie[]) {
+    // CACHE: To prevent Rate Limiting when hydrating 50 episodes of the same show
+    const titleCache = new Map<string, Promise<any[]>>();
+
     return Promise.all(localMovies.map(async (m) => {
-        // CLEAN the title before searching TMDB
-        const { title: cleanTitle, year: cleanYear } = parseFilename(m.title);
+        // Clean the title matches logic in search/page.tsx
+        const searchTitle = cleanTitle(m.title);
 
-        // Use clean info for hydration search
-        const tmdbMeta = await fetchTMDBMetadata(cleanTitle, cleanYear || m.year);
+        // CACHE LOGIC
+        if (!titleCache.has(searchTitle)) {
+            // Use searchMulti to find both Movies and TV
+            titleCache.set(searchTitle, tmdb.searchMulti(searchTitle));
+        }
 
-        if (tmdbMeta) {
+        let globalMatches: TMDBMovie[] = [];
+        try {
+            globalMatches = (await titleCache.get(searchTitle)) || [];
+        } catch (e) {
+            console.warn("Search failed for", searchTitle);
+        }
+
+        // Check for TV signatures in original title
+        const isTvSignature = /s\d+/i.test(m.title) || /\d+x\d+/i.test(m.title) || /season/i.test(m.title) || /\b(complete|episode|ep)\b/i.test(m.title);
+
+        // Best Match Logic
+        const bestMatch = globalMatches.find(g => {
+            // If local file matches TV pattern, STRICTLY ignore movies
+            if (isTvSignature && g.media_type === 'movie') return false;
+
+            const tmdbTitle = (g.title || g.name || '').toLowerCase();
+            const localTitle = m.title.toLowerCase();
+            const searchTitleClean = searchTitle;
+
+            const cleanTmdb = tmdbTitle.replace(/^the\s+/, '');
+            const cleanLocal = searchTitleClean.replace(/^the\s+/, '');
+
+            const titleMatch = cleanTmdb === cleanLocal || cleanTmdb.includes(cleanLocal) || cleanLocal.includes(cleanTmdb);
+
+            if (!titleMatch) return false;
+
+            if (isTvSignature) return true; // Ignore year check for TV
+
+            if (m.year === 'unknown' || m.year === '2000') return true;
+
+            const releaseDate = g.release_date || g.first_air_date || '';
+            if (releaseDate.startsWith(m.year)) return true;
+
+            const movieYear = parseInt(m.year);
+            const tmdbYear = parseInt(releaseDate.split('-')[0]);
+            if (!isNaN(movieYear) && !isNaN(tmdbYear) && Math.abs(tmdbYear - movieYear) <= 1) {
+                return true;
+            }
+
+            return false;
+        }) || (isTvSignature ? globalMatches.find(g => g.media_type === 'tv') : globalMatches[0]);
+
+        if (bestMatch) {
             return {
-                id: tmdbMeta.id, // Use REAL TMDB ID (Merging key)
-                title: tmdbMeta.title,
-                original_title: m.title, // Keep local title as original
-                overview: `[LOCAL AVAILABLE] ${m.quality} • ${m.size} • ${m.codec}\n${tmdbMeta.overview || ''}`,
-                poster_path: tmdbMeta.poster_path, // Use Real Poster
-                backdrop_path: tmdbMeta.backdrop_path,
-                release_date: tmdbMeta.release_date || (m.year !== 'unknown' ? `${m.year}-01-01` : '2000-01-01'),
-                vote_average: tmdbMeta.vote_average || 10,
-                vote_count: tmdbMeta.vote_count,
-                popularity: tmdbMeta.popularity,
-                media_type: 'movie',
+                ...bestMatch,
+                id: bestMatch.id,
+                title: bestMatch.title || bestMatch.name,
+                original_title: m.title,
+                overview: `[LOCAL AVAILABLE] ${m.quality} • ${m.size} • ${m.codec}\n${bestMatch.overview || ''}`,
+                poster_path: bestMatch.poster_path,
+                backdrop_path: bestMatch.backdrop_path,
+                release_date: bestMatch.release_date || bestMatch.first_air_date || (m.year !== 'unknown' ? `${m.year}-01-01` : '2000-01-01'),
+                vote_average: bestMatch.vote_average || 10,
+                vote_count: bestMatch.vote_count,
+                popularity: bestMatch.popularity,
+                media_type: bestMatch.media_type || (bestMatch.first_air_date ? 'tv' : 'movie'),
 
                 // Top Level Metadata for DownloadSection
                 quality: m.quality,
@@ -134,9 +174,8 @@ async function hydrateMovies(localMovies: LocalMovie[]) {
                 slug: m.slug,
                 file_id: m.file_id,
                 year: m.year,
-                _id: m._id?.toString(), // Pass ID for React Keys
+                _id: m._id?.toString(),
 
-                // Keep local data for badges (legacy/backup)
                 local_data: {
                     quality: m.quality,
                     size: m.size,
@@ -145,9 +184,9 @@ async function hydrateMovies(localMovies: LocalMovie[]) {
             };
         }
 
-        // Fallback if not found on TMDB
+        // Fallback (Negative ID)
         return {
-            id: stringToHash(m.file_id),
+            id: -stringToHash(m.file_id), // NEGATIVE ID to avoid collisions
             title: m.title,
             original_title: m.title,
             overview: `${m.quality} • ${m.size || 'Unknown Size'} • ${m.codec || 'No Codec'}\n${m.caption}`,
@@ -157,16 +196,15 @@ async function hydrateMovies(localMovies: LocalMovie[]) {
             vote_average: 10,
             media_type: 'movie',
 
-            // Top Level Metadata
             quality: m.quality,
             size: m.size,
             codec: m.codec,
             slug: m.slug,
             file_id: m.file_id,
             year: m.year,
-            _id: m._id?.toString(), // Pass ID for React Keys
+            _id: m._id?.toString(),
 
-            local_data: true // Marker for frontend filtering
+            local_data: true
         };
     }));
 }
