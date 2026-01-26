@@ -48,7 +48,18 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
             if (m.year === 'unknown') return true;
 
             const releaseDate = g.release_date || g.first_air_date || '';
-            return releaseDate.startsWith(m.year);
+            // Relaxed Year Check: Allow +/- 1 year difference or simple startsWith
+            if (releaseDate.startsWith(m.year)) return true;
+
+            // If year differs but title is EXACT match, maybe it's valid?
+            // Let's stick to strict-ish year data for now to avoid "Home Alone" (2021) matching "Home Alone" (1990)
+            const movieYear = parseInt(m.year);
+            const tmdbYear = parseInt(releaseDate.split('-')[0]);
+            if (!isNaN(movieYear) && !isNaN(tmdbYear) && Math.abs(tmdbYear - movieYear) <= 1) {
+                return true;
+            }
+
+            return false;
         }) || globalMatches[0];
 
         if (bestMatch) {
@@ -67,8 +78,9 @@ async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[
         }
 
         // Search-only fallback
+        // USE NEGATIVE ID to avoid collision with real TMDB IDs
         return {
-            id: stringToHash(m.file_id),
+            id: -stringToHash(m.file_id),
             title: m.title,
             original_title: m.title,
             overview: `${m.quality || 'Unknown'} • ${m.size || 'Unknown'} • ${m.codec || 'Unknown'}\n${m.caption}`,

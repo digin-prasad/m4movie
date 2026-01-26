@@ -4,13 +4,37 @@ import { ChevronLeft, Star, Calendar, Clock } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
 
+import { getLocalMovieByHash } from '@/lib/search';
+
 export default async function MoviePage({ params }: { params: Promise<{ id: string }> }) {
     const { id } = await params;
-    let movie = await tmdb.getMovie(parseInt(id));
+    const numericId = parseInt(id);
 
-    // Fallback: If not a movie, try fetching as TV show
-    if (!movie) {
-        movie = await tmdb.getTvShow(parseInt(id));
+    let movie: any = null;
+
+    // Handle Local Files (Negative ID)
+    if (numericId < 0) {
+        const local = await getLocalMovieByHash(numericId);
+        if (local) {
+            movie = {
+                id: numericId,
+                title: local.title,
+                original_title: local.title,
+                overview: `[LOCAL FILE] ${local.caption}\nQuality: ${local.quality || 'N/A'} • Size: ${local.size || 'N/A'}`,
+                poster_path: null,
+                backdrop_path: null,
+                release_date: local.year !== 'unknown' ? `${local.year}-01-01` : '2000-01-01',
+                vote_average: 10,
+                media_type: 'movie' // Treat as movie for display basic info
+            };
+        }
+    } else {
+        // TMDB Fetch
+        movie = await tmdb.getMovie(numericId);
+        // Fallback: If not a movie, try fetching as TV show
+        if (!movie) {
+            movie = await tmdb.getTvShow(numericId);
+        }
     }
 
     if (!movie) return (

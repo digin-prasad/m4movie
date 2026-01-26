@@ -142,3 +142,12 @@ export async function searchLocalMovies(query: string): Promise<LocalMovie[]> {
         .sort((a, b) => a.score - b.score)
         .map(r => r.movie);
 }
+
+export async function getLocalMovieByHash(hashId: number): Promise<LocalMovie | null> {
+    const movies = await getMovies();
+    // Hash collision check: We assume hash matches.
+    // Since we generate hash from file_id, we just need to find the one that hashes to this.
+    // Note: This is O(N) but N is small for local cache.
+    // Using simple loop.
+    return movies.find(m => stringToHash(m.file_id) === Math.abs(hashId)) || null;
+}
