@@ -61,3 +61,19 @@ process.on('SIGTERM', () => {
     frontendProc.kill();
     process.exit();
 });
+
+// 3. Render Keep-Alive (Self-Ping)
+// Prevents Free Tier from sleeping by pinging the external URL every 14 minutes.
+if (process.env.RENDER || process.env.UNIFIED_DEPLOY) {
+    const keepAliveUrl = process.env.RENDER_EXTERNAL_URL || 'https://m4movie.onrender.com';
+    console.log(`[Keep-Alive] Initialized for ${keepAliveUrl}`);
+
+    const https = require('https');
+    setInterval(() => {
+        https.get(keepAliveUrl, (res) => {
+            console.log(`[Keep-Alive] Pinged ${keepAliveUrl} - Status: ${res.statusCode}`);
+        }).on('error', (err) => {
+            console.error(`[Keep-Alive] Ping failed:`, err.message);
+        });
+    }, 14 * 60 * 1000); // 14 minutes
+}
