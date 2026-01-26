@@ -116,35 +116,40 @@ export function HeroSection({ backgroundMovies }: HeroSectionProps) {
                 {isSearchActive && searchResults.length > 0 && (
                     <div className="w-full max-w-4xl px-4 animate-in fade-in slide-in-from-bottom-8 duration-300 flex-1 overflow-hidden min-h-0 pointer-events-auto">
                         <div className="bg-black/40 backdrop-blur-xl border border-white/10 rounded-2xl p-4 overflow-y-auto max-h-[50vh] custom-scrollbar grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-2">
-                            {searchResults.map((movie, index) => (
-                                <Link
-                                    key={`${movie.id}-${index}`}
-                                    href={`/movie/${movie.id}`}
-                                    className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors group"
-                                >
-                                    <div className="relative w-12 h-16 flex-shrink-0 bg-muted rounded overflow-hidden shadow-md">
-                                        <Image
-                                            src={movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : '/placeholder.jpg'}
-                                            alt={movie.title}
-                                            fill
-                                            unoptimized
-                                            className="object-cover"
-                                        />
-                                    </div>
-                                    <div className="flex-1 min-w-0 text-left">
-                                        <h4 className="text-sm font-medium text-white truncate group-hover:text-primary transition-colors">
-                                            {movie.title || movie.name}
-                                        </h4>
-                                        <div className="flex items-center text-xs text-white/50 mt-1 space-x-2">
-                                            <span>{(movie.release_date || movie.first_air_date)?.split('-')[0] || 'N/A'}</span>
-                                            <span>•</span>
-                                            <span className="flex items-center text-yellow-500">
-                                                ★ {movie.vote_average?.toFixed(1) || '0.0'}
-                                            </span>
+                            {searchResults.map((movie, index) => {
+                                const isTv = (movie as any).media_type === 'tv' || (!movie.title && !!movie.name);
+                                const href = isTv ? `/tv/${movie.id}?type=tv` : `/movie/${movie.id}?type=movie`;
+                                return (
+                                    <Link
+                                        key={`${movie.id}-${index}`}
+                                        href={href}
+                                        className="flex items-center gap-3 p-2 rounded-lg hover:bg-white/10 transition-colors group"
+                                    >
+                                        <div className="relative w-12 h-16 flex-shrink-0 bg-muted rounded overflow-hidden shadow-md">
+                                            <Image
+                                                src={movie.poster_path ? `https://image.tmdb.org/t/p/w200${movie.poster_path}` : '/placeholder.jpg'}
+                                                alt={movie.title || movie.name}
+                                                fill
+                                                unoptimized
+                                                className="object-cover"
+                                            />
                                         </div>
-                                    </div>
-                                </Link>
-                            ))}
+                                        <div className="flex-1 min-w-0 text-left">
+                                            <h4 className="text-sm font-medium text-white truncate group-hover:text-primary transition-colors">
+                                                {movie.title || movie.name}
+                                            </h4>
+                                            <div className="flex items-center text-xs text-white/50 mt-1 space-x-2">
+                                                <span>{(movie.release_date || movie.first_air_date)?.split('-')[0] || 'N/A'}</span>
+                                                <span>•</span>
+                                                <span className="flex items-center text-yellow-500">
+                                                    ★ {movie.vote_average?.toFixed(1) || '0.0'}
+                                                </span>
+                                                {isTv && <span className="text-[9px] border border-white/20 px-1 rounded bg-white/5">TV</span>}
+                                            </div>
+                                        </div>
+                                    </Link>
+                                )
+                            })}
                         </div>
                     </div>
                 )}
