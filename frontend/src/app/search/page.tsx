@@ -11,27 +11,46 @@ type Props = {
 async function hydrateLocalMovies(localMovies: LocalMovie[]): Promise<TMDBMovie[]> {
     // We can't use the API route URL efficiently here, so we use direct logic
     // This effectively "promotes" local files to have TMDB metadata if possible
+
     // Helper to clean title for better search results
     const cleanTitle = (t: string) => {
         return t.toLowerCase()
             .replace(/\b(19|20)\d{2}\b/g, '') // Remove Year
-            .replace(/s\d+(e\d+)?/g, '')      // Remove S01E01
+            .replace(/s\d+\s*e\d+/g, '')      // Remove S01E01 or S01 E01
+            .replace(/s\d+/g, '')             // Remove S01
+            .replace(/\d+x\d+/g, '')          // Remove 1x01
             .replace(/season\s*\d+/g, '')     // Remove Season 1
+            .replace(/episode\s*\d+/g, '')    // Remove Episode 1
             .replace(/\b(4k|2160p|1080p|720p|480p|bluray|web-dl|webrip|x264|x265|hevc|aac|ac3|dts)\b/g, '') // Remove Quality
             .replace(/[.\-_]/g, ' ')          // Replace separators with space
             .replace(/\s+/g, ' ')             // Collapse spaces
             .trim();
     };
 
+    // CACHE: To prevent Rate Limiting when hydrating 50 episodes of the same show
+    const titleCache = new Map<string, Promise<TMDBMovie[]>>();
+
     const hydrated = await Promise.all(localMovies.map(async (m) => {
         // Clean the title before searching to improve hit rate
         const searchTitle = cleanTitle(m.title);
 
         // USE MULTI SEARCH to distinguish between Movie and TV
-        const globalMatches = await tmdb.searchMulti(searchTitle);
+        // Use Cache to avoid hitting TMDB 50 times for "Game of Thrones"
+        if (!titleCache.has(searchTitle)) {
+            // Add a small delay for different titles to be nice to the API? 
+            // No, promise caching is enough for deduplication.
+            titleCache.set(searchTitle, tmdb.searchMulti(searchTitle));
+        }
+
+        let globalMatches: TMDBMovie[] = [];
+        try {
+            globalMatches = await titleCache.get(searchTitle) || [];
+        } catch (e) {
+            console.warn("Search failed for", searchTitle);
+        }
 
         // Check for TV signatures in original title (before cleaning)
-        const isTvSignature = /s\d+(e\d+)?/i.test(m.title) || /season/i.test(m.title) || /\b(complete|episode|ep)\b/i.test(m.title);
+        const isTvSignature = /s\d+/i.test(m.title) || /\d+x\d+/i.test(m.title) || /season/i.test(m.title) || /\b(complete|episode|ep)\b/i.test(m.title);
 
         // Find rough match with year if possible
         const bestMatch = globalMatches.find(g => {
