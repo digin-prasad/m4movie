@@ -22,7 +22,8 @@ interface DownloadSectionProps {
 
 export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
     const [activeTab, setActiveTab] = useState('720p');
-    const [downloads, setDownloads] = useState<any[]>([]); // Use 'any' or proper type
+    const [activeSeason, setActiveSeason] = useState<number | 'movie'>('movie'); // New State for Season
+    const [downloads, setDownloads] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const botUsername = process.env.NEXT_PUBLIC_BOT_USERNAME || 'M4_MOVIEBOT';
 
@@ -30,30 +31,49 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
         const fetchDownloads = async () => {
             try {
                 // Fetch specific results for this movie title (Server Side Search) WITH ungroup=true
-                // This ensures we get ALL file versions (720p, 1080p) not just one banner
                 const res = await fetch(`/api/movies?q=${encodeURIComponent(movieTitle)}&ungroup=true`);
                 const data = await res.json();
-
-                // Handle API response (Array)
                 const results = Array.isArray(data) ? data : (data.movies || []);
 
-                // Filter to ensure we only show LOCAL files that match this movie
-                // And ensure we have local_data (meaning it's a file, not just a global search result)
-                const matches = results.filter((m: any) => {
-                    if (!m.local_data) return false; // Must be a local file
-
-                    const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
-                    return normalize(m.title).includes(normalize(movieTitle)) || normalize(movieTitle).includes(normalize(m.title));
-                });
+                // Filter & Parse
+                const matches = results
+                    .filter((m: any) => {
+                        if (!m.local_data) return false;
+                        const normalize = (str: string) => str.toLowerCase().replace(/[^a-z0-9]/g, '');
+                        return normalize(m.title).includes(normalize(movieTitle)) || normalize(movieTitle).includes(normalize(m.title));
+                    })
+                    .map((m: any) => {
+                        // Parse Season from Title (e.g. S01, Season 1, S1)
+                        let season: number | 'movie' = 'movie';
+                        const sMatch = m.title.match(/(?:^|[_\s\.\[\(])(?:S|Season)\s*(\d{1,2})(?:[_\s\.\]\)]|$|E)/i);
+                        if (sMatch) {
+                            season = parseInt(sMatch[1], 10);
+                        }
+                        return { ...m, season };
+                    });
 
                 setDownloads(matches);
 
-                // Auto-select tab if available
+                // Auto-Initialize State
                 if (matches.length > 0) {
-                    const resolutions = matches.map((m: any) => m.quality);
+                    // Detect if we have seasons or just movies
+                    const seasons = Array.from(new Set(matches.map((m: any) => m.season))).sort((a: any, b: any) => {
+                        if (a === 'movie') return -1;
+                        if (b === 'movie') return 1;
+                        return a - b;
+                    });
+
+                    // Set initial season (first available)
+                    const firstSeason = seasons[0] as number | 'movie';
+                    setActiveSeason(firstSeason);
+
+                    // Set initial quality for that season
+                    const seasonFiles = matches.filter((m: any) => m.season === firstSeason);
+                    const resolutions = seasonFiles.map((m: any) => m.quality);
+
                     if (resolutions.includes('720p')) setActiveTab('720p');
                     else if (resolutions.includes('1080p')) setActiveTab('1080p');
-                    else setActiveTab(resolutions[0]);
+                    else if (resolutions.length > 0) setActiveTab(resolutions[0]);
                 }
 
             } catch (e) {
@@ -66,24 +86,34 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
         fetchDownloads();
     }, [movieTitle]);
 
-    // Filter files based on active tab
-    const filteredFiles = downloads.filter(f => (f.quality?.toLowerCase() || 'unknown') === activeTab.toLowerCase());
+    // Extract Available Seasons
+    const availableSeasons = Array.from(new Set(downloads.map(d => d.season)))
+        .sort((a: any, b: any) => {
+            if (a === 'movie') return -1;
+            if (b === 'movie') return 1;
+            return a - b;
+        });
 
-    // Extract available qualities dynamically (filter out empty/null)
-    const availableQualities = Array.from(new Set(downloads.map(d => d.quality?.toLowerCase() || 'unknown'))).sort();
+    // Filter by Season THEN Quality
+    const seasonFiles = downloads.filter(d => d.season === activeSeason);
 
-    // Auto-select tab logic
+    // Extract Qualities for the CURRENT Season
+    const availableQualities = Array.from(new Set(seasonFiles.map(d => d.quality?.toLowerCase() || 'unknown'))).sort();
+
+    // Auto-switch tab if current activeTab doesn't exist in new season
     useEffect(() => {
         if (availableQualities.length > 0 && !availableQualities.includes(activeTab)) {
             if (availableQualities.includes('720p')) setActiveTab('720p');
             else if (availableQualities.includes('1080p')) setActiveTab('1080p');
             else setActiveTab(availableQualities[0]);
         }
-    }, [availableQualities, activeTab]);
+    }, [activeSeason, availableQualities, activeTab]);
 
-    // Count per quality
+    const filteredFiles = seasonFiles.filter(f => (f.quality?.toLowerCase() || 'unknown') === activeTab.toLowerCase());
+
+    // Count per quality (for current season)
     const counts = availableQualities.reduce((acc, q) => {
-        acc[q] = downloads.filter(d => d.quality === q).length;
+        acc[q] = seasonFiles.filter(d => d.quality === q).length;
         return acc;
     }, {} as Record<string, number>);
 
@@ -93,6 +123,26 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                 <Download className="w-6 h-6 text-primary" />
                 Available Downloads
             </h3>
+
+            {/* Season Selector (Only if we have seasons) */}
+            {availableSeasons.length > 0 && (availableSeasons.length > 1 || availableSeasons[0] !== 'movie') && (
+                <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                    {availableSeasons.map((season: any) => (
+                        <button
+                            key={season}
+                            onClick={() => setActiveSeason(season)}
+                            className={cn(
+                                "px-4 py-2 rounded-full text-sm font-bold whitespace-nowrap transition-all border border-transparent",
+                                activeSeason === season
+                                    ? "bg-white text-black border-white shadow-lg scale-105"
+                                    : "bg-white/10 text-white hover:bg-white/20 border-white/10"
+                            )}
+                        >
+                            {season === 'movie' ? 'Movie Files' : `Season ${season}`}
+                        </button>
+                    ))}
+                </div>
+            )}
 
             {/* Dynamic Resolution Tabs */}
             {availableQualities.length > 0 && (
@@ -108,7 +158,6 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                                     : "text-muted-foreground hover:bg-white/5 hover:text-white"
                             )}
                         >
-                            {/* Icons based on likely resolution */}
                             {(res === '480p' || res === '360p') && <Smartphone className="w-4 h-4" />}
                             {res === '720p' && <Monitor className="w-4 h-4" />}
                             {(res === '1080p' || res === '4k' || res === '2160p') && <Film className="w-4 h-4" />}
@@ -125,22 +174,18 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                 </div>
             )}
 
-            {/* Search Files Input */}
+            {/* Search Files Input & List (Same as before) */}
             <div className="relative">
                 <input
                     type="text"
-                    placeholder="Search files (e.g. x265, HEVC)"
+                    placeholder={`Search files in ${activeSeason === 'movie' ? 'Movie' : 'Season ' + activeSeason}...`}
                     className="w-full bg-background/50 border border-white/10 rounded-lg py-3 px-4 pl-10 text-sm focus:outline-none focus:border-primary/50 transition-colors duration-100"
                 />
                 <div className="absolute left-3 top-1/2 -translate-y-1/2">
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                    </svg>
+                    <SearchIcon className="text-muted-foreground w-4 h-4" />
                 </div>
             </div>
 
-            {/* File List */}
-            {/* File List or Empty State */}
             <div className="space-y-3">
                 {downloads.length === 0 ? (
                     <div className="flex flex-col items-center justify-center p-8 rounded-xl bg-card/50 border border-white/5 text-center space-y-4">
@@ -150,7 +195,7 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                         <div>
                             <h4 className="text-lg font-medium text-white">No files available yet</h4>
                             <p className="text-sm text-muted-foreground mt-1 max-w-sm">
-                                We haven't uploaded this movie yet. You can request it, and our admins will add it shortly.
+                                We haven't uploaded this movie yet. You can request it.
                             </p>
                         </div>
                         <Link
@@ -180,28 +225,23 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
                                     <h4 className="font-medium text-white truncate text-sm md:text-base">
                                         {file.original_title ? file.original_title.replace(/[._]/g, ' ') : file.title} {file.year !== 'unknown' ? file.year : ''} <span className="text-primary">{file.quality?.toUpperCase()}</span>
                                     </h4>
+                                    {/* Episode Tag */}
+                                    {file.season !== 'movie' && (
+                                        <span className="ml-2 px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-500 border border-amber-500/30 text-[10px] font-bold uppercase">
+                                            {file.title.match(/[Ee](\d{1,2})/) ? `EP ${file.title.match(/[Ee](\d{1,2})/)[1]}` : 'BATCH'}
+                                        </span>
+                                    )}
                                 </div>
                                 <div className="flex items-center gap-3 text-xs text-muted-foreground">
-                                    {/* Size */}
                                     <span className="flex items-center gap-1 font-mono text-white/70">
                                         <HardDrive className="w-3 h-3" />
                                         {file.size || 'Unknown Size'}
                                     </span>
-
-                                    {/* Codec / Extra Info */}
                                     {file.codec && (
                                         <span className="px-1.5 py-0.5 rounded bg-white/10 border border-white/10 text-[10px] uppercase">
                                             {file.codec}
                                         </span>
                                     )}
-
-                                    {/* Good Encode Badge */}
-                                    {/(PSA|HEVC|x265|10bit|Pahe)/i.test(file.codec || '') && (
-                                        <span className="px-2 py-0.5 rounded bg-green-500/20 text-green-400 border border-green-500/30 font-semibold text-[10px] uppercase tracking-wider shadow-[0_0_10px_rgba(74,222,128,0.1)]">
-                                            Good Encode
-                                        </span>
-                                    )}
-
                                     <span className="px-2 py-0.5 rounded bg-blue-500/10 text-blue-500 border border-blue-500/20 font-medium text-[10px] uppercase tracking-wider">
                                         Telegram File
                                     </span>
@@ -229,4 +269,14 @@ export function DownloadSection({ movieId, movieTitle }: DownloadSectionProps) {
             </div>
         </div>
     );
+}
+
+// Icon Helper
+function SearchIcon({ className }: { className?: string }) {
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className}>
+            <circle cx="11" cy="11" r="8" />
+            <path d="m21 21-4.3-4.3" />
+        </svg>
+    )
 }
