@@ -6,8 +6,9 @@ import Link from 'next/link';
 
 import { getLocalMovieByHash } from '@/lib/search';
 
-export default async function MoviePage({ params }: { params: Promise<{ id: string }> }) {
+export default async function MoviePage({ params, searchParams }: { params: Promise<{ id: string }>, searchParams: Promise<{ type?: string }> }) {
     const { id } = await params;
+    const { type } = await searchParams;
     const numericId = parseInt(id);
 
     let movie: any = null;
@@ -29,11 +30,18 @@ export default async function MoviePage({ params }: { params: Promise<{ id: stri
             };
         }
     } else {
-        // TMDB Fetch
-        movie = await tmdb.getMovie(numericId);
-        // Fallback: If not a movie, try fetching as TV show
-        if (!movie) {
+        // TMDB Fetch with Type Hinting
+        // If type is explicitly 'tv', try TV first.
+        if (type === 'tv') {
             movie = await tmdb.getTvShow(numericId);
+            // Fallback to movie if tv fails (unlikely if hinted)
+            if (!movie) movie = await tmdb.getMovie(numericId);
+        } else {
+            // Default behavior: Try Movie first
+            movie = await tmdb.getMovie(numericId);
+            if (!movie) {
+                movie = await tmdb.getTvShow(numericId);
+            }
         }
     }
 

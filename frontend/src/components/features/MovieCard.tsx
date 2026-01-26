@@ -16,8 +16,13 @@ export function MovieCard({ movie, className }: MovieCardProps) {
 
     // Heuristic: If it has a 'name' but no 'title', or media_type is 'tv', it's a TV show.
     // This prevents "Home Alone" (TV Show) linking to "Home Alone" (Movie) which share IDs.
-    const isTv = (movie as any).media_type === 'tv' || (!movie.title && !!movie.name);
-    const href = isTv ? `/tv/${movie.id}` : `/movie/${movie.id}`;
+    const isTv = (movie as any).media_type === 'tv' || (!movie.title && !!movie.name) || !!(movie as any).first_air_date;
+
+    // Construct Link
+    // We append ?type=... to help the target page disambiguate IDs (e.g. Witcher TV vs Runestone Movie share ID)
+    const typeParam = isTv ? 'tv' : 'movie';
+    // If it's TV, prefer /tv/ route, but fail-safe to /movie/ with param if needed (though /tv/ page exists)
+    const href = isTv ? `/tv/${movie.id}?type=tv` : `/movie/${movie.id}?type=movie`;
 
     return (
         <Link
