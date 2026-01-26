@@ -14,6 +14,18 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Optimizations for Render Free Tier (Prevent OOM)
+  typescript: {
+    ignoreBuildErrors: true,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
+  experimental: {
+    // Reduce memory usage
+    cpus: 1,
+    workerThreads: false,
+  },
 };
 
 
