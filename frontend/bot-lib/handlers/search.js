@@ -1,6 +1,6 @@
 const fs = require('fs');
 const path = require('path');
-const moviesPath = path.join(__dirname, '../../shared/movies.json');
+const moviesPath = path.join(__dirname, '../../../shared/movies.json');
 
 const readDB = () => {
     try {

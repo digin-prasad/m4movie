@@ -2,7 +2,7 @@ const mongo = require('./mongo');
 const fs = require('fs');
 const path = require('path');
 
-const DB_PATH = path.join(__dirname, '../../shared/movies.json');
+const DB_PATH = path.join(__dirname, '../../../shared/movies.json');
 let cache = { movies: [], meta: {} };
 let isMongoConnected = false;
 
